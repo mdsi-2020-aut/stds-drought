@@ -9,6 +9,8 @@ library(raustats)
 
 #load 
 load("data/seifa_proficiency.RData")
+load("data/unemployment.RData")
+load("data/seifa1986_06.RData")
 
 #here's the code the download and tidying the data
 org <- "ABS"
@@ -147,15 +149,16 @@ proficiency <- proficiency %>% rename(AGE_ID = AGE,
                                       LGA_2016 = LGA_2016_label.en,
                                       PERIOD = obsTime)
 
-library(raustats)
 # set this directory to place you wan to store teh data files
 dir <- "C:\\Users\\HP\\Documents\\Uni Stuff\\2020\\36103 Statistical Thinking for Data Science\\AT2\\stds-drought"
 
 #Remoteness data by category and postcode
 rem_tab <- abs_cat_tables("1270.0.55.005",include_urls = T)
-rem_url <- rem_tab$path_zip[7] 
+rem_url <- rem_tab$path_zip[8] 
 rem_file <-  abs_cat_unzip(abs_cat_download(rem_url,dir),dir)
-remotness <- read_xls(rem1,sheet = 'Table 3')
+remotness <- read_xls(rem_file,sheet = 'Table 3',skip =4)
+
+save(remotness, file="data/rem.RData")
 
 #SEFIA 1986 - 2006
 #teh method of storgae for all of them is diffrent for some bizzare reason
@@ -164,7 +167,7 @@ tab2006 <- abs_cat_tables("2033.0.55.001",include_urls = T,releases = '2006')
 
 url_2006 <- tab2006$path_xls[3] 
 file2006 <- abs_cat_download(url_2006,dir)
-seifa2006 <- read_xls(r1,sheet = 'Table 1',skip =4)
+seifa2006 <- read_xls(file2006,sheet = 'Table 1',skip =4)
 
 tab2001 <- abs_cat_tables("2033.0.55.001",include_urls = T,releases = '2001')
 url_2001 <- tab2001$path_zip
@@ -192,3 +195,5 @@ folder1986<-abs_cat_unzip(abs_cat_download(url_1986,dir),dir)
 
 seifa1986 <- read_xls(folder1986[1])
 
+
+save(seifa1986,seifa1991,seifa1996,seifa2001,seifa2006, file="data/seifa1986_06.RData")
