@@ -12,7 +12,7 @@ rm(list = ls())
 setwd('~/UTS/STDS/AT2/stds-drought')
 
 ### Install and/or load libraries to be used
-#install.packages(c('raustats','ggplot2','dplyr','stringr','scales','ASGS) #To install all required libraries
+#install.packages(c('raustats','ggplot2','dplyr','stringr','scales','ASGS') #To install all required libraries
 library(raustats)
 library(dplyr)
 library(stringr)
