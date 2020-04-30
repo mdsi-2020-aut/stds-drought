@@ -69,6 +69,9 @@ nrow(uniques_sa4)
 unemployment <- unemployment %>% 
   select(date,unemployment_rate,territory_sa4)
 
+### Save R object
+#save(unemployment,file="~/UTS/STDS/AT2/stds-drought/data/unemployment.RData")
+
 #### VISUALISATION ####
 
 # Unemployment rate time series - Visualisation
