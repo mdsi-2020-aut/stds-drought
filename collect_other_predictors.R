@@ -78,6 +78,29 @@ for (idx in proficienct_codelist[3]){
                                                   labels = TRUE))
 }
 
+#get list of dimensions of "SEIFA per post code" DSD
+non_school_dims <- getDimensions(org, "ABS_CENSUS2011_B40_SA1_SA")
+
+#get all the codelists
+non_school_codelist <- map(.x = names(flatten(non_school_dims)),
+                           flow = "ABS_CENSUS2011_B40_SA1_SA",
+                           provider = org,
+                           .f = getCodes) %>% set_names(names(flatten(non_school_dims)))
+
+non_school_qual <- data.frame()
+for (idx in non_school_codelist[2]){
+  non_school_qual <- rbind(non_school_qual, as.data.frame(readSDMX(providerId = "ABS", 
+                                                           resource = "data", 
+                                                           flowRef = "ABS_CENSUS2011_B40_SA1_SA",
+                                                           key = list(NULL, names(idx), NULL, NULL, NULL, NULL, NULL), 
+                                                           dsd = TRUE), 
+                                                  labels = TRUE))
+}
+
+getTimeSeries(org,"ABS_CENSUS2011_B40_SA1_SA.*.*.*.*.*.*.*" )
+
+getFlows("ABS","*B40*")
+
 #tidying SEIFA data
 #check measure naming consistency
 unique(seifa_data_bypostcode$SEIFAINDEXTYPE)
