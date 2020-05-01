@@ -1,13 +1,16 @@
-#load 
-load("data/seifa_proficiency.RData")
+Sys.setenv(JAVA_HOME='C:\\Program Files\\Java\\jre1.8.0_251') # Comment out if RJDMX works out of teh box for you
+library(rJava) #this too
 
-#here's the code the download and tidying the data
 library(RJSDMX)
 library(rsdmx)
 library(readabs)
 library(tidyverse)
 library(raustats)
 
+#load 
+load("data/seifa_proficiency.RData")
+
+#here's the code the download and tidying the data
 org <- "ABS"
 Sys.setenv(R_READABS_PATH = "data/")
 
@@ -167,19 +170,48 @@ proficiency <- proficiency %>% rename(AGE_ID = AGE,
                                       LGA_2016 = LGA_2016_label.en,
                                       PERIOD = obsTime)
 
-#use readabs package to download australian demographics statistics
-age <- data.frame()
-for (i in 51:59){
-  age <- rbind(age,read_abs(cat_no = "3101.0",tables = i))
+library(raustats)
+# set this directory to place you wan to store teh data files
+dir <- "C:\\Users\\HP\\Documents\\Uni Stuff\\2020\\36103 Statistical Thinking for Data Science\\AT2\\stds-drought"
+
+#Remoteness data by category and postcode
+rem_tab <- abs_cat_tables("1270.0.55.005",include_urls = T)
+rem_url <- rem_tab$path_zip[7] 
+rem_file <-  abs_cat_unzip(abs_cat_download(rem_url,dir),dir)
+remotness <- read_xls(rem1,sheet = 'Table 3')
+
+#SEFIA 1986 - 2006
+#teh method of storgae for all of them is diffrent for some bizzare reason
+
+tab2006 <- abs_cat_tables("2033.0.55.001",include_urls = T,releases = '2006')
+
+url_2006 <- tab2006$path_xls[3] 
+file2006 <- abs_cat_download(url_2006,dir)
+seifa2006 <- read_xls(r1,sheet = 'Table 1',skip =4)
+
+tab2001 <- abs_cat_tables("2033.0.55.001",include_urls = T,releases = '2001')
+url_2001 <- tab2001$path_zip
+folder2001<-abs_cat_unzip(abs_cat_download(url_2001,dir),dir)
+seifa2001 <- read_xls(folder2001[5,1])
+
+tab1996 <- abs_cat_tables("2033.0.55.001",include_urls = T,releases = '1996')
+url_1996 <- tab1996$path_zip
+folder1996<-abs_cat_unzip(abs_cat_download(url_1996,dir),dir)
+
+seifa1996 <- NULL
+for(i in 1:(length(folder1996)-1)){
+  xls<-read_xls(folder1996[i])
+  seifa1996 <- bind_rows(seifa1996,xls)
 }
 
-age <- age %>% mutate(state = case_when(table_no =="3101051" ~ "NSW",
-                                 table_no =="3101052" ~ "VIC",
-                                 table_no =="3101053" ~ "QLD",
-                                 table_no =="3101054" ~ "SA",
-                                 table_no =="3101055" ~ "WA",
-                                 table_no =="3101056" ~ "TAS",
-                                 table_no =="3101057" ~ "NT",
-                                 table_no =="3101058" ~ "ACT",
-                                 table_no =="3101059" ~ "AUS")) %>%
-  mutate(count_item = length(str_split(series, pattern = ";")))
+tab1991 <- abs_cat_tables("2033.0.55.001",include_urls = T,releases = '1991')
+url_1991 <- tab1991$path_zip
+folder1991<-abs_cat_unzip(abs_cat_download(url_1991,dir),dir)
+seifa1991 <- read_xls(folder1991[1])
+
+tab1986 <- abs_cat_tables("2033.0.55.001",include_urls = T,releases = '1986')
+url_1986 <- tab1986$path_zip
+folder1986<-abs_cat_unzip(abs_cat_download(url_1986,dir),dir)
+
+seifa1986 <- read_xls(folder1986[1])
+
