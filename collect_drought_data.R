@@ -3,47 +3,44 @@ library("RCurl")
 library("dplyr")
 
 # Testing the bomrang api
-# rain_1007 <- get_historical(stationid = 1007, type = 'rain') # type = rain, solar, max, min
+#rain_1007 <- get_historical(stationid = 1007, type = 'rain') # type = rain, solar, max, min
 
 # Get Weather Station File
 bom_stn_id_file <- read.csv("data/BOM_StationID.csv")
-names(bom_stn_id_file)
-# # Store Ids Only
-stn_ids_only <- bom_stn_id_file %>%
-  select(1)
-head(stn_ids_only)
 
-# stn_ids_only <- c(1006, 1007, 066062)
-# name <- paste(paste("rain", 1234, sep = "_"),"csv", sep=".")
+#  Store Ids,Region, Lat, Long Only
+stn_ids_only <- bom_stn_id_file %>%
+   rename("station_id"= "ï..STN_NUM") %>% 
+   select(station_id, REGION, LATITUDE,LONGITUDE)
+
 
 #Loop through the IDs for Rainfall data
 rainfall_df = data.frame()
-for(id in stn_ids_only) {
-  print(id)
-  rainfall_df <- rbind(rainfall_df, get_historical(stationid = id, type = 'rain'))
+for(id in stn_ids_only$station_id) {
+tryCatch({
+  rainfall_df <- rbind(temperature_df, get_historical(stationid = id, type = 'rain'))}, error= function(e) {paste("Data not found for the station", id)})
 }
-write.csv(rainfall_df, "BOM_Rainfall.csv")
+rainfall_df <- rainfall_df %>% 
+  inner_join(stn_ids_only, by= c("station_id" = "Bureau of Meteorology station number"))
 
-#Loop through the IDs for Max temperature data
+rainfall_df <- rainfall_df %>%
+  filter(year >= 1990)
+
+save(rainfall_df, file="data/bom_rainfall.RData")
+
+
+# Loop through the IDs for Max temperature data
 temperature_df = data.frame()
-for(id in stn_ids_only) {
-  print(id)
-  temperature_df <- rbind(temperature_df, get_historical(stationid = id, type = 'max'))
+for(id in stn_ids_only$station_id) {
+  tryCatch({
+    temperature_df <- rbind(temperature_df, get_historical(stationid = id, type = 'max'))}, error= function(e) {paste("Data not found for the station", id)})
 }
-write.csv(temperature_df, "BOM_Temperature.csv")
+temperature_df <- temperature_df %>% 
+  inner_join(stn_ids_only, by= c("station_id" = "Bureau of Meteorology station number"))
 
-# Remove the observations prior to 1920
-bom_rainfall <- read.csv("BOM_Rainfall.csv")
-names(bom_rainfall)
-nrow(bom_rainfall) #108113
-bom_rainfall <- bom_rainfall %>% 
-  filter(year >= 1920)
-nrow(bom_rainfall) #85469
+temperature_df <- temperature_df %>%
+  filter(year >= 1990)
 
-# Remove the observations prior to 1920
-bom_temperature <- read.csv("BOM_Temperature.csv")
-names(bom_rainfall)
-nrow(bom_rainfall) 
-bom_rainfall <- bom_temperature %>% 
-  filter(year >= 1920)
-nrow(bom_temperature)
+save(temperature_df, file="data/bom_temperature.RData")
+
+
