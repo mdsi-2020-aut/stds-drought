@@ -1,6 +1,7 @@
-Sys.setenv(JAVA_HOME='C:/Program Files/Java/jre1.8.0_251') # Comment out if RJDMX works out of teh box for you
-library(rJava) #this too
+#Sys.setenv(JAVA_HOME='C:/Program Files/Java/jre1.8.0_251') # Uncomment out if RJDMX  does not work out of the box for you
+#library(rJava) #this too
 
+#Loading libraries required
 library(RJSDMX)
 library(rsdmx)
 library(readabs)
@@ -21,6 +22,8 @@ dir = "data"
 org <- "ABS"
 Sys.setenv(R_READABS_PATH = "data/")
 
+######################################################################################
+#changed method of getting SEIFA data to align with other years.
 # #use RJSDMX to explore the structure
 # #get SEIFA based on post code flows ID
 # flows <- getFlows(org,"*SEIFA*Postal*")
@@ -70,6 +73,9 @@ Sys.setenv(R_READABS_PATH = "data/")
 # flows2 <- getFlows(org,"*CENSUS*2016*")
 # flows2
 #get list of dimensions of "SEIFA per post code" DSD
+######################################################################################
+
+#Get English proficiency data
 proficiency_dims <- getDimensions(org, "ABS_C16_T08_LGA")
 
 #get all the codelists
@@ -87,7 +93,8 @@ for (idx in proficienct_codelist[3]){
                                                            dsd = TRUE), 
                                                   labels = TRUE))
 }
-
+#######################################################################################
+#changed method of getting SEIFA data to align with other years.
 # #tidying SEIFA data
 # #check measure naming consistency
 # unique(seifa_data_bypostcode$SEIFAINDEXTYPE)
@@ -116,6 +123,8 @@ for (idx in proficienct_codelist[3]){
 #                                      id_cols = -SEIFA_MEASURE_label.en,
 #                                      names_from = SEIFA_MEASURE_label.en,
 #                                      values_from = obsValue)
+#######################################################################################
+
 
 #tidying proficiency data
 proficiency %>% mutate(proficiency_level = case_when(ENGLP_2016 == "1" ~ "ENGLISH_ONLY",
@@ -154,10 +163,7 @@ proficiency <- proficiency %>% rename(AGE_ID = AGE,
                                       LGA_2016 = LGA_2016_label.en,
                                       PERIOD = obsTime)
 
-# set this directory to place you wan to store teh data files
-
-
-#Remoteness data by category and postcode
+#Remoteness data by category and postcode acquisition
 rem_tab <- abs_cat_tables("1270.0.55.005",include_urls = T)
 rem_url <- rem_tab$path_zip[8] 
 rem_file <-  abs_cat_unzip(abs_cat_download(rem_url,dir),dir)
@@ -165,8 +171,8 @@ remotness <- read_xls(rem_file,sheet = 'Table 3',skip =4)
 
 save(remotness, file="data/rem.RData")
 
-#SEFIA 1986 - 2006
-#teh method of storgae for all of them is diffrent for some bizzare reason
+#SEFIA 1986 - 2016
+#the method of storage for all of them is diffrent for some bizzare reason
 
 tab2016 <- abs_cat_tables("2033.0.55.001",include_urls = T,releases = 'latest')
 url_2016 <- tab2016$path_xls[5] 
@@ -198,7 +204,7 @@ for(i in 1:(length(folder1996)-1)){
   xls<-read_xls(folder1996[i])
   seifa1996 <- bind_rows(seifa1996,xls)
 }
-
+# 1986 and 1991 SEIFA data not used
 tab1991 <- abs_cat_tables("2033.0.55.001",include_urls = T,releases = '1991')
 url_1991 <- tab1991$path_zip
 folder1991<-abs_cat_unzip(abs_cat_download(url_1991,dir),dir)
@@ -213,12 +219,24 @@ seifa1986 <- read_xls(folder1986[1])
 
 save(seifa1986,seifa1991,seifa1996,seifa2001,seifa2006, file="data/seifa1986_06.RData")
 
-#Just cleaning
+#Tidy seifa1996
+#Removed unwanted column: CD, State, SD, SSD, LGA, SLA
+# Note this was the only year in our collection that also didn't have the weighted mean already grouped by POA
+#Kept columns: 
+# Postcode
+# SEIFA population
+# Index of Socio-Econmic Advantage and Disadvantage
+# Index of Relative Socio-Economic Disadvantage
+# Index of Economic Resources
+# Index of Education & OCcupation
 
 tidy_seifa_1996 <- seifa1996 %>%  mutate(`Index of Relative Socio-Economic Advantage and Disadvantage` =  
                                        if_else(is.na(`Urban Index of Relative Socio-Economic Advantage`),
                                                `Rural Index of Relative Socio-Economic Advantage`,
                                                `Urban Index of Relative Socio-Economic Advantage`)) %>%
+                                                #Combined from two mutually exclusive columns "Rural" and 
+                                                #"Urban" Indexes of Relative Socio-Economic Advantage into one
+                                                #Only occurs in seifa1996
                                   mutate(Population = `SEIFA96 Population`) %>%
                                   select(c(`Index of Relative Socio-Economic Advantage and Disadvantage`,
                                          `Index of Relative Socio-Economic Disadvantage`,
@@ -239,12 +257,12 @@ tidy_seifa_1996 <- seifa1996 %>%  mutate(`Index of Relative Socio-Economic Advan
                                            weighted.mean(`Index of Education & Occupation`,Weight))  %>%
                                   mutate(Population = sum(Population)) %>% 
                                   select(-c(Weight)) %>% 
-                                  distinct() 
-#join to post_sa4 df and get weighted averages
+                                  distinct()
+#join to post_sa4 df and get weighted averages of POA to SA4
 tidy_seifa_1996 <- inner_join(tidy_seifa_1996,post_sa2_sa4,by = c("POA" = "POSTCODE")) %>% 
                                   mutate(Weight = Population) %>% 
                                   group_by(SA4_NAME_2016) %>%
-                                  # make the value weighted mean of each POA
+                                  # make the value weighted mean of each SA4
                                   mutate(Weight = Weight/sum(Weight)) %>% 
                                   mutate(`Index of Relative Socio-Economic Advantage and Disadvantage` = 
                                            weighted.mean(`Index of Relative Socio-Economic Advantage and Disadvantage`,Weight)) %>% 
@@ -259,6 +277,20 @@ tidy_seifa_1996 <- inner_join(tidy_seifa_1996,post_sa2_sa4,by = c("POA" = "POSTC
                                   distinct() 
                                   
 
+#Tidy seifa2001
+#Removed:
+#Postal_Area_Name
+#State_Code
+#State_Name
+#All Q, Min, Max and Med data (total 39 removed cols)
+
+#Kept:
+# Postal_Area_Code
+# SEIFA_2001_Population
+# Advantage_Disadvantage
+# Disadvantage
+# Econ_Resource
+# Educ_Occupation
 
 tidy_seifa_2001 <- seifa2001 %>%  mutate(Population = `SEIFA_2001_Population`) %>%
                                   mutate(POA = `Postal_Area_Code`) %>%
@@ -275,12 +307,11 @@ tidy_seifa_2001 <- seifa2001 %>%  mutate(Population = `SEIFA_2001_Population`) %
                                            `Index of Economic Resources`, `Index of Education & Occupation`,
                                            Population,POA)) %>% 
                                     mutate(Year = 2001)
-
 #join to post_sa4 df and get weighted averages
 tidy_seifa_2001 <- inner_join(tidy_seifa_2001,post_sa2_sa4,by = c("POA" = "POSTCODE")) %>% 
                                   mutate(Weight = Population) %>% 
                                   group_by(SA4_NAME_2016) %>%
-                                  # make the value weighted mean of each POA
+                                  # make the value weighted mean of each SA4
                                   mutate(Weight = Weight/sum(Weight)) %>% 
                                   mutate(`Index of Relative Socio-Economic Advantage and Disadvantage` = 
                                            weighted.mean(`Index of Relative Socio-Economic Advantage and Disadvantage`,Weight)) %>% 
@@ -313,7 +344,7 @@ tidy_seifa_2006 <- seifa2006[-1,] %>% mutate(Population = `Usual Resident Popula
 tidy_seifa_2006 <- inner_join(tidy_seifa_2006,post_sa2_sa4,by = c("POA" = "POSTCODE")) %>% 
                                       mutate(Weight = Population) %>% 
                                       group_by(SA4_NAME_2016) %>%
-                                      # make the value weighted mean of each POA
+                                      # make the value weighted mean of each SA4
                                       mutate(Weight = Weight/sum(Weight)) %>% 
                                       mutate(`Index of Relative Socio-Economic Advantage and Disadvantage` = 
                                                weighted.mean(`Index of Relative Socio-Economic Advantage and Disadvantage`,Weight)) %>% 
@@ -347,7 +378,7 @@ tidy_seifa_2011 <- tidy_seifa_2011[complete.cases(tidy_seifa_2011),]
 tidy_seifa_2011 <- inner_join(tidy_seifa_2011,post_sa2_sa4,by = c("POA" = "POSTCODE")) %>% 
                                       mutate(Weight = Population) %>% 
                                       group_by(SA4_NAME_2016) %>%
-                                      # make the value weighted mean of each POA
+                                      # make the value weighted mean of each SA4
                                       mutate(Weight = Weight/sum(Weight)) %>% 
                                       mutate(`Index of Relative Socio-Economic Advantage and Disadvantage` = 
                                                weighted.mean(`Index of Relative Socio-Economic Advantage and Disadvantage`,Weight)) %>% 
@@ -381,7 +412,7 @@ tidy_seifa_2016 <- tidy_seifa_2016[complete.cases(tidy_seifa_2016),]
 tidy_seifa_2016 <- inner_join(tidy_seifa_2016,post_sa2_sa4,by = c("POA" = "POSTCODE")) %>% 
                                       mutate(Weight = Population) %>% 
                                       group_by(SA4_NAME_2016) %>%
-                                      # make the value weighted mean of each POA
+                                      # make the value weighted mean of each SA4
                                       mutate(Weight = Weight/sum(Weight)) %>% 
                                       mutate(`Index of Relative Socio-Economic Advantage and Disadvantage` = 
                                                weighted.mean(`Index of Relative Socio-Economic Advantage and Disadvantage`,Weight)) %>% 
@@ -395,12 +426,13 @@ tidy_seifa_2016 <- inner_join(tidy_seifa_2016,post_sa2_sa4,by = c("POA" = "POSTC
                                       select(-c(Weight,POA,SA2_MAINCODE)) %>% 
                                       distinct() 
 
+#Create SEIFA dataset of 1996-2016 data
 tidy_seifa <-  bind_rows(tidy_seifa_1996,tidy_seifa_2001,tidy_seifa_2006,tidy_seifa_2011, tidy_seifa_2016)
 #Kicking out Chrismas Island, Cocos Islands, Jervis Bay,Norfolk Island
 tidy_seifa <-tidy_seifa %>% filter(SA4_NAME_2016 != "Other Territories") 
 
 
-#Add last census dat to data frame
+#Add last census date to data frame
 unemployment$year = year(unemployment$date)
 unemployment$census  = (5*floor((unemployment$year-1)/5))+1
 unemployment$year = NULL
