@@ -71,12 +71,9 @@ tail(water_stn)
 
 # Merge with SA4 Data
 water_stn$territory_sa4 <- ASGS::latlon2SA(water_stn$lat, water_stn$lng, to = "SA4", yr = "2016")
-#precp_stn_tmp<-precp_stn
 water_sa4 <- water_stn
-head(water_sa4)
 
 # Merge with Unemployment Data
-glimpse(water_sa4)
 water_sa4$territory_sa4 <- as.character(water_sa4$territory_sa4)
 water_sa4 %>% filter(str_detect(territory_sa4, "Grater Hobart"))
 
