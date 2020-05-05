@@ -1,0 +1,109 @@
+library("xml2")
+library(dplyr)
+library(stringr)
+library(dplyr)
+library(ASGS)
+library(ASGS.foyer)
+
+out_obs.xml <- read_xml("out_obs.xml")
+#each station observation is separated by OM_Observation
+observation <- xml_find_all(out_obs.xml,".//om:OM_Observation")
+head(observation)
+#initiate data.frame to store time series
+waterdata <- data.frame()
+for(obs in observation){
+  #get station id per observation
+  station_url <- xml_attr(xml_find_all(obs, ".//om:featureOfInterest"),"href")
+  #parse station_URL to get ID Only
+  station_id <- strsplit(station_url,"/")[[1]][7]
+  #get observation. each observation separated by MeasurementTVP
+  series <- xml_find_all(obs, ".//wml2:MeasurementTVP")
+  for(point in series){
+    #date stored in wml2:time
+    xdate <- xml_text(xml_find_all(point, ".//wml2:time"))
+    #date stored in wml2:value
+    xvalue <- xml_text(xml_find_all(point, ".//wml2:value"))
+    #store it into data.frame
+    waterdata <- rbind(waterdata, data.frame(station_url=station_url,
+      station_id = station_id,
+      date=xdate,
+      value = xvalue))
+  }
+}
+head(waterdata)
+out_obs2.xml <- read_xml("out_obs2.xml")
+#each station observation is separated by OM_Observation
+observation2 <- xml_find_all(out_obs2.xml,".//om:OM_Observation")
+#initiate data.frame to store time series
+waterdata2 <- data.frame()
+for(obs in observation2){
+  #get station id per observation
+  station_url <- xml_attr(xml_find_all(obs, ".//om:featureOfInterest"),"href")
+  #parse station_URL to get ID Only
+  station_id <- strsplit(station_url,"/")[[1]][7]
+  #get observation. each observation separated by MeasurementTVP
+  series <- xml_find_all(obs, ".//wml2:MeasurementTVP")
+  for(point in series){
+    #date stored in wml2:time
+    xdate <- xml_text(xml_find_all(point, ".//wml2:time"))
+    #date stored in wml2:value
+    xvalue <- xml_text(xml_find_all(point, ".//wml2:value"))
+    #store it into data.frame
+    waterdata2 <- rbind(waterdata2, data.frame(station_url=station_url,
+      station_id = station_id,
+      date=xdate,
+      value = xvalue))
+  }
+}
+waterdata <- rbind(waterdata, waterdata2)
+
+# Load the downloaded Water level csv and Station list csv
+waterlevel <- read.csv("waterdata.csv")
+dam_stationlist <- read.csv("dam_station_list.csv")
+
+# Join Water Data and Station Data
+water_stn <- waterlevel %>% 
+  inner_join(dam_stationlist, by= c("station_id" = "station_id")) %>% 
+  mutate(date = as.Date(date, '%Y-%m-%d'))
+
+water_stn$station_url <- NULL
+tail(water_stn)
+
+# Merge with SA4 Data
+water_stn$territory_sa4 <- ASGS::latlon2SA(water_stn$lat, water_stn$lng, to = "SA4", yr = "2016")
+water_sa4 <- water_stn
+
+# Merge with Unemployment Data
+water_sa4$territory_sa4 <- as.character(water_sa4$territory_sa4)
+water_sa4 %>% filter(str_detect(territory_sa4, "Grater Hobart"))
+
+unemploy_sa4 <- c("Greater Hobart","New South Wales - Central West","Victoria - North West",
+  "Western Australia - Outback (North and South)","Western Australia - Outback (North and South)",
+  "Tasmania - South East","Tasmania - West and North West")
+
+waterlevel_sa4 <- c("Hobart","Central West","North West","Western Australia - Outback (North)",
+  "Western Australia - Outback (South)","South East","West and North West")
+# Renaming
+for(i in 1:length(rainfall_sa4)){
+  water_sa4$territory_sa4[water_sa4$territory_sa4 == waterlevel_sa4[i]] <- unemploy_sa4[i]
+}
+
+# Going to merge with Unemployment Data
+load("data/unemployment.RData")
+
+# Identidied the extra space at the end of unemployment$terriority_sa2 and Trimming it
+# "Darwin " in unemploymnet, "Darwin" in water_sa4
+# unique(water_sa4$territory_sa4) # unique(unemployment$territory_sa4)
+unemployment$territory_sa4 <- str_trim(unemployment$territory_sa4, side="both")
+unique(unemployment$territory_sa4)
+
+# Actual Merging with Unemployment data using left_join
+water_unemployment <- unemployment %>% 
+  left_join(water_sa4, by=c("territory_sa4" = "territory_sa4", "date" = "date"))
+
+# Save the finalised merged data
+save(water_unemployment, file="data/unemployment_water.RData")
+# tail(water_unemployment)
+# View(water_unemployment)
+
+
