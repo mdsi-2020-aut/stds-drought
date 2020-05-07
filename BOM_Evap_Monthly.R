@@ -31,10 +31,6 @@ for (filename in bom_evap_monthly_list) {
   firstline_data <- str_split(first_line, pattern=" ")
   stationid = firstline_data[[1]][8]
 
-  # Create Data frame and append stationId # working
-  onestation_df <- read.table(paste("HQ_monthly_evap_txt", filename, sep="/"), skip=1)
-  onestation_df$stationid <- stationid
-
   # Read the text file of Evap into a Data frame
   onestation_df <- read.table(paste("HQ_monthly_evap_txt", filename, sep="/"), skip=1)
   # Add a column of stationId into the df
@@ -53,8 +49,8 @@ colnames(evap_stn) <- c("from", "to", "evap", "stationid", "lat","long", "elv","
 
 #filter out the records prior to 1990
 evap_stn <- evap_stn %>% 
-  mutate(from = as.Date(as.character(from), '%Y%m%d')) %>% 
-  mutate(to = as.Date(as.character(to), '%Y%m%d'))
+  mutate(from = as.Date(as.character(from), '%Y-%m-%d')) %>% 
+  mutate(to = as.Date(as.character(to), '%Y-%m-%d'))
 
 #filter out the records prior to 1990
 evap_stn <- evap_stn %>%
@@ -89,3 +85,5 @@ save(evap_unemployment, file="data/bom_evap.RData")
 # Extra Checking - Optional
 nrow(evap_unemployment)
 precp_sa4 %>% filter(str_detect(territory_sa4,"^Australian Capital Territory"))
+
+

@@ -39,10 +39,16 @@ for (filename in bom_precip_monthly_list) {
   precipitation_df <- rbind(precipitation_df,onestation_df)
  
 }
-
+# glimpse(precipitation_df)
+# glimpse(bom_station_list)
+# class(precipitation_df$stationid)
+# class(bom_station_list$station_id)
+# bom_station_list$station_id is factor and precipitation_df$stationid is character
+bom_station_list$station_id <- as.character(bom_station_list$station_id)
 # Join with station Table
 precp_stn <- precipitation_df %>% 
   inner_join(bom_station_list, by= c("stationid" = "station_id"))
+
 
 # Reformat the date (V1, V2) from string to "1999-09-01" in Sync wiht Unemploymnet Data
 colnames(precp_stn) <- c("from", "to", "precp", "stationid", "lat","long", "elv","stationname")
@@ -53,16 +59,16 @@ precp_stn <- precp_stn %>%
 # Filter out the records prior to 1990
 precp_stn <- precp_stn %>%
   filter(from >= as.Date("1996-01-01") & to >= as.Date("1996-01-31"))
-
+head(precp_stn)
 
 # Merge with SA4 Data
 precp_stn$territory_sa4 <- ASGS::latlon2SA(precp_stn$lat, precp_stn$long, to = "SA4", yr = "2016")
-#precp_stn_tmp<-precp_stn
+# precp_stn_tmp<-precp_stn
 precp_sa4 <- precp_stn
 
 # Standardisation of terriority names with Unemployment Data
 precp_sa4$territory_sa4 <- as.character(precp_sa4$territory_sa4)
-precp_stn %>% filter(str_detect(territory_sa4, "^Hobart"))
+#precp_stn %>% filter(str_detect(territory_sa4, "^Hobart"))
 unemploy_sa4 <- c("Greater Hobart","New South Wales - Central West","Victoria - North West",
   "Western Australia - Outback (North and South)","Western Australia - Outback (North and South)",
   "Tasmania - South East","Tasmania - West and North West")
@@ -75,17 +81,19 @@ for(i in 1:length(rainfall_sa4)){
   precp_sa4$territory_sa4[precp_sa4$territory_sa4 == rainfall_sa4[i]] <- unemploy_sa4[i]
 }
 
+unique(precp_sa4$territory_sa4) 
+unique(unemployment$territory_sa4)
+
 # Merge with Unemployment Data
 load("data/unemployment.RData")
 precp_unemployment <- unemployment %>% 
   left_join(precp_sa4, by=c("territory_sa4" = "territory_sa4", "date" = "from"))
-save(precp_unemployment, file="data/bom_precp.RData")
+save(precp_unemployment, file="data/unemployment_precp.RData")
 
 # Extra Checking - Optional
-head(precp_unemployment)
+View(precp_unemployment)
 precp_sa4 %>% filter(str_detect(territory_sa4,"^Australian Capital Territory"))
 
 
-
-
-
+load("data/unemployment_precp.RData")
+View(precp_unemployment)
