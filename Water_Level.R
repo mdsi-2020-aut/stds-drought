@@ -5,6 +5,7 @@ library(dplyr)
 library(ASGS)
 library(ASGS.foyer)
 
+# The source of file http://www.bom.gov.au/waterdata/services?service=SOS
 out_obs.xml <- read_xml("out_obs.xml")
 #each station observation is separated by OM_Observation
 observation <- xml_find_all(out_obs.xml,".//om:OM_Observation")
@@ -60,10 +61,11 @@ waterdata <- rbind(waterdata, waterdata2)
 # Load the downloaded Water level csv and Station list csv
 waterlevel <- read.csv("waterdata.csv")
 dam_stationlist <- read.csv("dam_station_list.csv")
+# nrow(waterlevel) # 109228
 
 # Join Water Data and Station Data
 water_stn <- waterlevel %>% 
-  inner_join(dam_stationlist, by= c("station_id" = "station_id")) %>% 
+ inner_join(dam_stationlist, by= c("station_id" = "station_id")) %>% 
   mutate(date = as.Date(date, '%Y-%m-%d'))
 
 water_stn$station_url <- NULL
@@ -90,12 +92,10 @@ for(i in 1:length(rainfall_sa4)){
 
 # Going to merge with Unemployment Data
 load("data/unemployment.RData")
-
 # Identidied the extra space at the end of unemployment$terriority_sa2 and Trimming it
 # "Darwin " in unemploymnet, "Darwin" in water_sa4
 # unique(water_sa4$territory_sa4) # unique(unemployment$territory_sa4)
 unemployment$territory_sa4 <- str_trim(unemployment$territory_sa4, side="both")
-unique(unemployment$territory_sa4)
 
 # Actual Merging with Unemployment data using left_join
 water_unemployment <- unemployment %>% 
