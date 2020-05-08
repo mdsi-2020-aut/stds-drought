@@ -83,12 +83,14 @@ for(i in 1:length(rainfall_sa4)){
 
 unique(precp_sa4$territory_sa4) 
 unique(unemployment$territory_sa4)
+unemployment$territory_sa4 <- str_trim(unemployment$territory_sa4, side="both")
 
 # Merge with Unemployment Data
 load("data/unemployment.RData")
 precp_unemployment <- unemployment %>% 
   left_join(precp_sa4, by=c("territory_sa4" = "territory_sa4", "date" = "from"))
 save(precp_unemployment, file="data/unemployment_precp.RData")
+sum(is.na(precp_unemployment$precp)) # 1151
 
 # Extra Checking - Optional
 View(precp_unemployment)
