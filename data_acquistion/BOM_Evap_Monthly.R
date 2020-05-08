@@ -12,7 +12,7 @@ library(ASGS.foyer)
 bom_evap_monthly_list <- list.files("HQ_monthly_evap_txt/", pattern="*.month.txt$")
 # Read the text file of weather station list (space delimited file)
 bom_evap_stn_list <- read.delim(paste("HQ_monthly_evap_txt", "HQME_stations", sep="/"), sep=" ", header=F, col.names=c("station_id","lat","long","elv", "name1","name2", "name3"))
-
+head(bom_evap_stn_list)
 # Concantenate the station names spreaded out in three different columns into one
 bom_evap_stn_list <- bom_evap_stn_list %>% 
   mutate(station_name = paste(name1,name2,name3))
@@ -39,26 +39,33 @@ for (filename in bom_evap_monthly_list) {
   # Append to the main df
   evap_df <- rbind(evap_df,onestation_df)
 }
+nrow(evap_df) #33122
 
+# bom_evap_stn_list$station_id is factor and precipitation_df$stationid is character
+bom_evap_stn_list$station_id <- as.character(bom_evap_stn_list$station_id)
 # Join Evaporation Dataframe with station Dataframe by stationid
 evap_stn <- evap_df %>% 
   inner_join(bom_evap_stn_list, by= c("stationid" = "station_id"))
+head(evap_stn)
 
 # Reformat the date (V1, V2) from strin to "1999-09-01" in Sync with date in Unemployment Data
 colnames(evap_stn) <- c("from", "to", "evap", "stationid", "lat","long", "elv","stationname")
 
 #filter out the records prior to 1990
 evap_stn <- evap_stn %>% 
-  mutate(from = as.Date(as.character(from), '%Y-%m-%d')) %>% 
-  mutate(to = as.Date(as.character(to), '%Y-%m-%d'))
+  mutate(from = as.Date(as.character(from), '%Y%m%d')) %>% 
+  mutate(to = as.Date(as.character(to), '%Y%m%d'))
+head(evap_stn)
 
 #filter out the records prior to 1990
 evap_stn <- evap_stn %>%
   filter(from >= as.Date("1996-01-01") & to >= as.Date("1996-01-31"))
+nrow(evap_stn) #14337
 
 # Merge with SA4 Data started
 evap_stn$territory_sa4 <- ASGS::latlon2SA(evap_stn$lat, evap_stn$long, to = "SA4", yr = "2016")
 evap_sa4 <- evap_stn
+nrow(evap_stn) # 14337
 
 # Standardisation of terriority names in Sync with Unemployment Data
 evap_sa4$territory_sa4 <- as.character(evap_sa4$territory_sa4)
@@ -74,16 +81,18 @@ load("data/unemployment.RData")
 for(i in 1:length(evaporation_sa4)){
   evap_sa4$territory_sa4[evap_sa4$territory_sa4 == evaporation_sa4[i]] <- unemploy_sa4[i]
 }
+nrow(evap_sa4) # 14337
 
-# Merge with SA4 Data
+# Merge with Unemployment Data
 evap_unemployment <- unemployment %>% 
   left_join(evap_sa4, by=c("territory_sa4" = "territory_sa4", "date" = "from"))
+nrow(evap_unemployment) # 21489
 
 # Save the finalised merged Evaporation ~ Unemployment data into R
-save(evap_unemployment, file="data/bom_evap.RData")
+save(evap_unemployment, file="data/unemployment_evap.RData")
 
 # Extra Checking - Optional
-nrow(evap_unemployment)
+nrow(evap_unemployment) # 21489
 precp_sa4 %>% filter(str_detect(territory_sa4,"^Australian Capital Territory"))
 
 
