@@ -86,6 +86,68 @@ proficiency_sa4 <- pivot_wider(proficiency_sa4, id_cols = -PROFICIENCY_LEVEL,
                                    names_from = PROFICIENCY_LEVEL, 
                                    values_from = obsValue)
 
+glimpse(proficiency_sa4)
+
+#calculate the percentage for each english proficiency level and sex
+#Column TOTAL is not equal to the addition of it's detailed proficiency level, so use the detail value instead
+proficiency_sa4_summary <- proficiency_sa4 %>% filter(SEX != "Persons" & AGE_RANGE != "All ages") %>%
+  group_by(SA4_NAME, PERIOD) %>%
+  summarise(FEMALES = sum(ifelse(SEX == "Females",ENGLISH_ONLY + OTHER_LANG_AND_ENGLISH_VERY_WELL + 
+                                   OTHER_LANG_AND_ENGLISH_WELL + OTHER_LANG_AND_ENGLISH_NOT_WELL +
+                                   OTHER_LANG_AND_ENGLISH_NOT_ATALL + LANGUAGE_AND_PROFICIENCY_NOT_STATED +
+                                   LANGUAGE_STATED_PROFICIENCY_NOT_STATED,0)),
+            MALES = sum(ifelse(SEX == "Males",ENGLISH_ONLY + OTHER_LANG_AND_ENGLISH_VERY_WELL + 
+                                 OTHER_LANG_AND_ENGLISH_WELL + OTHER_LANG_AND_ENGLISH_NOT_WELL +
+                                 OTHER_LANG_AND_ENGLISH_NOT_ATALL + LANGUAGE_AND_PROFICIENCY_NOT_STATED +
+                                 LANGUAGE_STATED_PROFICIENCY_NOT_STATED,0)),
+            ENGLISH_ONLY  = sum(ENGLISH_ONLY), 
+            OTHER_LANG_AND_ENGLISH_VERY_WELL = sum(OTHER_LANG_AND_ENGLISH_VERY_WELL),
+            OTHER_LANG_AND_ENGLISH_WELL = sum(OTHER_LANG_AND_ENGLISH_WELL), 
+            OTHER_LANG_AND_ENGLISH_NOT_WELL = sum(OTHER_LANG_AND_ENGLISH_NOT_WELL),
+            OTHER_LANG_AND_ENGLISH_NOT_ATALL = sum(OTHER_LANG_AND_ENGLISH_NOT_ATALL), 
+            LANGUAGE_AND_PROFICIENCY_NOT_STATED = sum(LANGUAGE_AND_PROFICIENCY_NOT_STATED), 
+            LANGUAGE_STATED_PROFICIENCY_NOT_STATED = sum(LANGUAGE_STATED_PROFICIENCY_NOT_STATED),
+            TOTAL = sum(TOTAL)) %>%
+  ungroup() %>%
+  mutate(ALL_TOTAL = ENGLISH_ONLY + OTHER_LANG_AND_ENGLISH_VERY_WELL + 
+           OTHER_LANG_AND_ENGLISH_WELL + OTHER_LANG_AND_ENGLISH_NOT_WELL +
+           OTHER_LANG_AND_ENGLISH_NOT_ATALL + LANGUAGE_AND_PROFICIENCY_NOT_STATED +
+           LANGUAGE_STATED_PROFICIENCY_NOT_STATED) %>%
+  mutate(ENGLISH_ONLY  = ENGLISH_ONLY/ALL_TOTAL, 
+         OTHER_LANG_AND_ENGLISH_VERY_WELL = OTHER_LANG_AND_ENGLISH_VERY_WELL/ALL_TOTAL,
+         OTHER_LANG_AND_ENGLISH_WELL = OTHER_LANG_AND_ENGLISH_WELL/ALL_TOTAL, 
+         OTHER_LANG_AND_ENGLISH_NOT_WELL = OTHER_LANG_AND_ENGLISH_NOT_WELL/ALL_TOTAL,
+         OTHER_LANG_AND_ENGLISH_NOT_ATALL = OTHER_LANG_AND_ENGLISH_NOT_ATALL/ALL_TOTAL, 
+         LANGUAGE_AND_PROFICIENCY_NOT_STATED = LANGUAGE_AND_PROFICIENCY_NOT_STATED/ALL_TOTAL, 
+         LANGUAGE_STATED_PROFICIENCY_NOT_STATED = LANGUAGE_STATED_PROFICIENCY_NOT_STATED/ALL_TOTAL,
+         FEMALES = FEMALES/ALL_TOTAL,
+         MALES = MALES/ALL_TOTAL,
+         TOTAL = NULL,
+         ALL_TOTAL = NULL)
+
+#calculate the percentage for each age
+#Column TOTAL is not equal to the addition of it's detailed proficiency level, so use the detail value instead
+proficiency_sa4_summary_age <- proficiency_sa4 %>% filter(SEX != "Persons" & AGE_RANGE != "All ages") %>%
+  group_by(SA4_NAME, PERIOD, AGE_RANGE) %>%
+  summarise(TOTAL_PER_AGE = sum(ENGLISH_ONLY + OTHER_LANG_AND_ENGLISH_VERY_WELL + 
+                          OTHER_LANG_AND_ENGLISH_WELL + OTHER_LANG_AND_ENGLISH_NOT_WELL +
+                          OTHER_LANG_AND_ENGLISH_NOT_ATALL + LANGUAGE_AND_PROFICIENCY_NOT_STATED +
+                          LANGUAGE_STATED_PROFICIENCY_NOT_STATED)) %>%
+  mutate(AGE_RANGE = paste("AGE", str_replace_all(AGE_RANGE,c(" " = "", "-" = "_", "and" = "_")),sep = "_")) %>%
+  inner_join(proficiency_sa4 %>% filter(SEX != "Persons" & AGE_RANGE != "All ages") %>%
+               group_by(SA4_NAME, PERIOD) %>%
+               summarise(TOTAL = sum(ENGLISH_ONLY + OTHER_LANG_AND_ENGLISH_VERY_WELL + 
+                                           OTHER_LANG_AND_ENGLISH_WELL + OTHER_LANG_AND_ENGLISH_NOT_WELL +
+                                           OTHER_LANG_AND_ENGLISH_NOT_ATALL + LANGUAGE_AND_PROFICIENCY_NOT_STATED +
+                                           LANGUAGE_STATED_PROFICIENCY_NOT_STATED)), by=c("SA4_NAME","PERIOD")) %>%
+  mutate(TOTAL_PER_AGE = TOTAL_PER_AGE/TOTAL) %>%
+  pivot_wider(names_from = AGE_RANGE, values_from = TOTAL_PER_AGE) %>%
+  mutate(TOTAL = NULL)
+
+#join both summary
+proficiency_sa4_summary <- proficiency_sa4_summary %>% inner_join(proficiency_sa4_summary_age,by=c("SA4_NAME","PERIOD"))
+summary(proficiency_sa4_summary)
+
 #do some correction to SA4 name in proficiency data
 unemploy_sa4 <- c("Greater Hobart","New South Wales - Central West","Victoria - North West",
               "Western Australia - Outback (North and South)","Western Australia - Outback (North and South)",
@@ -99,19 +161,19 @@ for(i in 1:length(prof_sa4)){
 
 #check if there are SA4 Area that is not available unemployment (vice versa)
 unemployment$territory_sa4 = str_trim(unemployment$territory_sa4,side = "both")
-prof_to_unemploy <- proficiency_sa4 %>% left_join(unemployment, by=c("SA4_NAME"="territory_sa4")) %>% filter(is.na(unemployment_rate)) %>% select(SA4_NAME, unemployment_rate)  
+prof_to_unemploy <- proficiency_sa4_summary %>% left_join(unemployment, by=c("SA4_NAME"="territory_sa4")) %>% filter(is.na(unemployment_rate)) %>% select(SA4_NAME, unemployment_rate)  
 unique(prof_to_unemploy$SA4_NAME)
-unemploy_to_prof <- unemployment %>% left_join(proficiency_sa4, by=c("territory_sa4" = "SA4_NAME")) %>% filter(is.na(TOTAL)) %>% select(territory_sa4, TOTAL)  
+unemploy_to_prof <- unemployment %>% left_join(proficiency_sa4_summary, by=c("territory_sa4" = "SA4_NAME")) %>% filter(is.na(ENGLISH_ONLY)) %>% select(territory_sa4, ENGLISH_ONLY)  
 unique(unemploy_to_prof$territory_sa4)
 
 #add column to unemployment
 unemployment <- unemployment %>% mutate(census_year = (5*floor((year(date)-1)/5))+1)
 
 #join unemployment with english proficiency
-unemployment_proficiency <- unemployment %>% left_join(proficiency_sa4, by=c("territory_sa4" = "SA4_NAME","census_year"="PERIOD"))
+unemployment_proficiency <- unemployment %>% left_join(proficiency_sa4_summary, by=c("territory_sa4" = "SA4_NAME","census_year"="PERIOD"))
 
 glimpse(unemployment)
 glimpse(proficiency_sa4)
 
 
-save(unemployment, unemployment_proficiency, proficiency_sa4, file = "data/unemployment_proficiency.RData")
+save(unemployment_proficiency, proficiency_sa4, proficiency_sa4_summary, file = "./data/unemployment_proficiency.RData")
