@@ -176,4 +176,4 @@ glimpse(unemployment)
 glimpse(proficiency_sa4)
 
 
-save(unemployment_proficiency, proficiency_sa4, proficiency_sa4_summary, file = "./data/unemployment_proficiency.RData")
+save(unemployment_proficiency, proficiency_sa4, proficiency_sa4_summary, file = "data/unemployment_proficiency.RData")
