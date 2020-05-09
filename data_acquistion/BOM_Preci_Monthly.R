@@ -89,13 +89,18 @@ unemployment$territory_sa4 <- str_trim(unemployment$territory_sa4, side="both")
 load("data/unemployment.RData")
 precp_unemployment <- unemployment %>% 
   left_join(precp_sa4, by=c("territory_sa4" = "territory_sa4", "date" = "from"))
+
+# Aggreate by SA4 and date for Average Precipitation and Unemployment Rate
+precp_unemployment <- precp_unemployment %>% 
+  group_by(territory_sa4, date) %>% 
+  summarise(precp_mean = mean(precp), unemployment_rate = mean(unemployment_rate))
+
 save(precp_unemployment, file="data/unemployment_precp.RData")
-sum(is.na(precp_unemployment$precp)) # 1151
+sum(is.na(precp_unemployment$precp_mean)) # 1151
 
 # Extra Checking - Optional
 View(precp_unemployment)
 precp_sa4 %>% filter(str_detect(territory_sa4,"^Australian Capital Territory"))
 
 
-load("data/unemployment_precp.RData")
-View(precp_unemployment)
+
