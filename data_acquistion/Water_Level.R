@@ -89,6 +89,8 @@ waterlevel_sa4 <- c("Hobart","Central West","North West","Western Australia - Ou
 for(i in 1:length(rainfall_sa4)){
   water_sa4$territory_sa4[water_sa4$territory_sa4 == waterlevel_sa4[i]] <- unemploy_sa4[i]
 }
+head(water_sa4)
+
 
 # Going to merge with Unemployment Data
 load("data/unemployment.RData")
@@ -101,9 +103,16 @@ unemployment$territory_sa4 <- str_trim(unemployment$territory_sa4, side="both")
 water_unemployment <- unemployment %>% 
   left_join(water_sa4, by=c("territory_sa4" = "territory_sa4", "date" = "date"))
 
+# Aggreate by SA4 and date for Average Water Level and Unemployment Rate
+water_unemployment <- water_unemployment %>% 
+  group_by(territory_sa4, date) %>% 
+  summarise(waterlevel_mean = mean(value), unemployment_rate = mean(unemployment_rate))
+
 # Save the finalised merged data
 save(water_unemployment, file="data/unemployment_water.RData")
-# tail(water_unemployment)
+
+# nrow(water_unemployment) # 21489
 # View(water_unemployment)
+
 
 

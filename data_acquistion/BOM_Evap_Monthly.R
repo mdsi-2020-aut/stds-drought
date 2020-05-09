@@ -81,18 +81,31 @@ load("data/unemployment.RData")
 for(i in 1:length(evaporation_sa4)){
   evap_sa4$territory_sa4[evap_sa4$territory_sa4 == evaporation_sa4[i]] <- unemploy_sa4[i]
 }
-nrow(evap_sa4) # 14337
+head(evap_sa4) # 14337
 
+# Identidied the extra space at the end of unemployment$terriority_sa2 and Trimming it
+# "Darwin " in ubemployment, "Darwin" in evap_sa4
+unique(evap_sa4$territory_sa4) # 29 terriority
+unique(unemployment$territory_sa4)
+unemployment$territory_sa4 <- str_trim(unemployment$territory_sa4, side="both")
 # Merge with Unemployment Data
 evap_unemployment <- unemployment %>% 
   left_join(evap_sa4, by=c("territory_sa4" = "territory_sa4", "date" = "from"))
-nrow(evap_unemployment) # 21489
+nrow(evap_unemployment) # 27488
+sum(is.na(evap_unemployment$evap)) # 15791
+
+# Aggreate by SA4 and date for Average Evaporation and Unemployment Rate
+evap_unemployment <- evap_unemployment %>% 
+  group_by(territory_sa4, date) %>% 
+  summarise(waterlevel_mean = mean(evap), unemployment_rate = mean(unemployment_rate))
 
 # Save the finalised merged Evaporation ~ Unemployment data into R
 save(evap_unemployment, file="data/unemployment_evap.RData")
 
+
+
 # Extra Checking - Optional
-nrow(evap_unemployment) # 21489
+head(evap_unemployment) # 21489
 precp_sa4 %>% filter(str_detect(territory_sa4,"^Australian Capital Territory"))
 
 
