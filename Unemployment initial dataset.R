@@ -168,7 +168,11 @@ for (i in 1:(round(length(high_rates)/5,0))) {
 # https://cran.r-project.org/web/packages/ASGS.foyer/ASGS.foyer.pdf
 # https://rdrr.io/cran/ASGS.foyer/src/R/latlon2SA.R
 # https://rdrr.io/github/HughParsonage/ASGS.foyer/man/install_ASGS.html
-#              verbose = FALSE)
+# https://stackoverflow.com/questions/29803253/r-extracting-coordinates-from-spatialpolygonsdataframe
+install_ASGS(temp.tar.gz = tempfile(fileext = ".tar.gz"), overwrite = FALSE, #To get the dictionary
+             lib = .libPaths()[1], repos = getOption("repos"),
+             type = getOption("pkgType", "source"), .reinstalls = 4L,
+             verbose = FALSE)
 
 #library(ASGS.foyer)
 #View(STE_2016_simple)
