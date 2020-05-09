@@ -31,7 +31,6 @@ for(obs in observation){
       value = xvalue))
   }
 }
-head(waterdata)
 out_obs2.xml <- read_xml("out_obs2.xml")
 #each station observation is separated by OM_Observation
 observation2 <- xml_find_all(out_obs2.xml,".//om:OM_Observation")
@@ -89,8 +88,6 @@ waterlevel_sa4 <- c("Hobart","Central West","North West","Western Australia - Ou
 for(i in 1:length(rainfall_sa4)){
   water_sa4$territory_sa4[water_sa4$territory_sa4 == waterlevel_sa4[i]] <- unemploy_sa4[i]
 }
-head(water_sa4)
-
 
 # Going to merge with Unemployment Data
 load("data/unemployment.RData")
