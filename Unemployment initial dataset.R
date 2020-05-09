@@ -168,11 +168,9 @@ for (i in 1:(round(length(high_rates)/5,0))) {
 # https://cran.r-project.org/web/packages/ASGS.foyer/ASGS.foyer.pdf
 # https://rdrr.io/cran/ASGS.foyer/src/R/latlon2SA.R
 # https://rdrr.io/github/HughParsonage/ASGS.foyer/man/install_ASGS.html
-# install_ASGS(temp.tar.gz = tempfile(fileext = ".tar.gz"), overwrite = FALSE, #To get the dictionary
-#              lib = .libPaths()[1], repos = getOption("repos"),
-#              type = getOption("pkgType", "source"), .reinstalls = 4L,
 #              verbose = FALSE)
 
+#library(ASGS.foyer)
 #View(STE_2016_simple)
 
 drought_example <- data.frame(station = c(123,456,789,963), 
@@ -180,3 +178,5 @@ drought_example <- data.frame(station = c(123,456,789,963),
                               lat = c(-33.865143,-37.840935,-31.953512, -12.462827),
                               lng = c(151.209900,144.946457,115.857048,130.841782))
 drought_example$territory_sa4 <- latlon2SA(drought_example$lat, drought_example$lng, to = "SA4", yr = "2016")
+
+#STE_2016_simple@polygons[[2]]@Polygons[[26]]@labpt
