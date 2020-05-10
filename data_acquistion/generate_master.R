@@ -19,21 +19,24 @@ glimpse(evap_unemployment)
 #remove extra spaces in the unemployment SA4 name
 unemployment$territory_sa4 <- str_trim(unemployment$territory_sa4, side="both")
 
+names(unemployment_proficiency) <- tolower(names(unemployment_proficiency))
 #join all the dataset
 master_social_good <- unemployment %>% 
   left_join(unemploy_seifa %>% select(-unemployment_rate), by=c("territory_sa4" = "SA4_NAME_2016","date")) %>%
   left_join(unemployment_RAPopWtd %>% select(-unemployment_rate), by=c("territory_sa4","date")) %>%
-  rename("Remoteness_Indexes" = "PopWtdRA_rank") %>%
+  rename("remoteness_index" = "PopWtdRA_rank") %>%
   left_join(unemployment_proficiency %>% select(-unemployment_rate), by=c("territory_sa4","date")) %>%
   left_join(water_unemployment %>% select(-unemployment_rate), by=c("territory_sa4","date")) %>%
   left_join(precp_unemployment %>% select(-unemployment_rate), by=c("territory_sa4","date")) %>%
-  left_join(evap_unemployment %>% select(-unemployment_rate), by=c("territory_sa4","date"))
+  left_join(evap_unemployment %>% select(-unemployment_rate), by=c("territory_sa4","date")) %>%
+  mutate(Year = NULL)
 
 summary(master_social_good)
+glimpse(master_social_good %>% filter(date > "2006-01-01"))
 
 #check join result
 #check are there any missing value
-tibble(columns = names(master_social_good %>% select(-date)), 
+tibble(columns = tolower(names(master_social_good %>% select(-date))), 
        values = 100 - colSums(!is.na(master_social_good %>% select(-date)))*100/nrow(master_social_good)) %>%
   arrange(desc(values)) %>%
   ggplot(mapping = aes(x = columns, y=values)) +
@@ -47,7 +50,7 @@ tibble(columns = names(unemployment %>% select(-date)),
        values = 100 - colSums(!is.na(unemployment %>% select(-date)))*100/nrow(unemployment)) %>%
   bind_rows(tibble(columns = names(unemploy_seifa %>% select(-date)), 
                    values = 100 - colSums(!is.na(unemploy_seifa %>% select(-date)))*100/nrow(unemploy_seifa))) %>%
-  bind_rows(tibble(columns = names(unemployment_RAPopWtd %>% select(-date) %>% rename("Remoteness_Indexes" = "PopWtdRA_rank")), 
+  bind_rows(tibble(columns = names(unemployment_RAPopWtd %>% select(-date) %>% rename("remoteness_index" = "PopWtdRA_rank")), 
                    values = 100 - colSums(!is.na(unemployment_RAPopWtd %>% select(-date)))*100/nrow(unemployment_RAPopWtd))) %>%
   bind_rows(tibble(columns = names(unemployment_proficiency %>% select(-date)), 
                    values = 100 - colSums(!is.na(unemployment_proficiency %>% select(-date)))*100/nrow(unemployment_proficiency))) %>%
