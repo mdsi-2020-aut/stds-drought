@@ -39,7 +39,13 @@ for (filename in bom_precip_monthly_list) {
   precipitation_df <- rbind(precipitation_df,onestation_df)
  
 }
-# glimpse(precipitation_df)
+save(precipitation_df, file="data/org_precp.RData")
+load("data/org_precp.RData")
+sum(is.na(precipitation_df$V3)) 
+precp_missing_value_percentage = sum(is.na(precipitation_df$V3))/nrow(precipitation_df)
+precp_missing_value_percentage # 0 m,v
+nrow(precipitation_df) #441154 obs
+
 # glimpse(bom_station_list)
 # class(precipitation_df$stationid)
 # class(bom_station_list$station_id)
@@ -48,6 +54,7 @@ bom_station_list$station_id <- as.character(bom_station_list$station_id)
 # Join with station Table
 precp_stn <- precipitation_df %>% 
   inner_join(bom_station_list, by= c("stationid" = "station_id"))
+nrow(precp_stn) #441154 rows
 
 
 # Reformat the date (V1, V2) from string to "1999-09-01" in Sync wiht Unemploymnet Data
@@ -55,16 +62,19 @@ colnames(precp_stn) <- c("from", "to", "precp", "stationid", "lat","long", "elv"
 precp_stn <- precp_stn %>% 
   mutate(from = as.Date(as.character(from), '%Y%m%d')) %>% 
   mutate(to = as.Date(as.character(to), '%Y%m%d'))
+nrow(precp_stn) #441154 rows
 
 # Filter out the records prior to 1990
 precp_stn <- precp_stn %>%
   filter(from >= as.Date("1996-01-01") & to >= as.Date("1996-01-31"))
-head(precp_stn)
+nrow(precp_stn) #8206
 
 # Merge with SA4 Data
 precp_stn$territory_sa4 <- ASGS::latlon2SA(precp_stn$lat, precp_stn$long, to = "SA4", yr = "2016")
+
 # precp_stn_tmp<-precp_stn
 precp_sa4 <- precp_stn
+nrow(precp_sa4) #82026
 
 # Standardisation of terriority names with Unemployment Data
 precp_sa4$territory_sa4 <- as.character(precp_sa4$territory_sa4)
@@ -76,31 +86,65 @@ unemploy_sa4 <- c("Greater Hobart","New South Wales - Central West","Victoria - 
 rainfall_sa4 <- c("Hobart","Central West","North West","Western Australia - Outback (North)",
   "Western Australia - Outback (South)","South East","West and North West")
 
-# Merging with SA4
+# Renaming
 for(i in 1:length(rainfall_sa4)){
   precp_sa4$territory_sa4[precp_sa4$territory_sa4 == rainfall_sa4[i]] <- unemploy_sa4[i]
 }
-
+head(precp_sa4) #82026
+sum(is.na(precp_sa4$precp)) # zero missing 
 unique(precp_sa4$territory_sa4) 
 unique(unemployment$territory_sa4)
 unemployment$territory_sa4 <- str_trim(unemployment$territory_sa4, side="both")
+save("precp_sa4", file="data/precp_sa4.RData")
+
+
+# To Check are there any terriorities which has more than one station, count stn Id by terriority
+head(precp_sa4)
+unique(precp_sa4$stationid) # 307 stations
+terr_precp_stn_count <- precp_sa4 %>% 
+  select(territory_sa4, stationid) %>% 
+  distinct() %>% 
+  group_by(territory_sa4) %>%
+  summarise(precp_stn_count = n()) %>%
+  arrange(desc(precp_stn_count)) 
+nrow(terr_precp_stn_count) # 45 Terr have more than one station
+View(terr_precp_stn_count)
+# Get SA4 list
+pure_sa4_list <- unemployment %>% 
+  select(territory_sa4) %>% 
+  distinct()
+pure_sa4_list # 87 
+# Check the count of station in each terriority and identify which terriorities have no station 
+lookup_missing_terr_precpstn <- pure_sa4_list %>% 
+  left_join(terr_precp_stn_count, by=c("territory_sa4"= "territory_sa4"))
+View(lookup_missing_terr_precpstn)
+save(lookup_missing_terr_precpstn, file="data/HPT/precp_stn_count_by_terriority.csv")
+
+
+
+
 
 # Merge with Unemployment Data
 load("data/unemployment.RData")
 precp_unemployment <- unemployment %>% 
   left_join(precp_sa4, by=c("territory_sa4" = "territory_sa4", "date" = "from"))
+nrow(precp_unemployment)# 78631
+head(precp_unemployment)
 
 # Aggreate by SA4 and date for Average Precipitation and Unemployment Rate
 precp_unemployment <- precp_unemployment %>% 
   group_by(territory_sa4, date) %>% 
   summarise(precp_mean = mean(precp), unemployment_rate = mean(unemployment_rate))
+nrow(precp_unemployment) # 
 
 save(precp_unemployment, file="data/unemployment_precp.RData")
 sum(is.na(precp_unemployment$precp_mean)) # 1151
 
+
+
 # Extra Checking - Optional
 View(precp_unemployment)
 precp_sa4 %>% filter(str_detect(territory_sa4,"^Australian Capital Territory"))
-
+tail(unemployment)
 
 

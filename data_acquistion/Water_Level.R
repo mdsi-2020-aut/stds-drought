@@ -55,29 +55,62 @@ for(obs in observation2){
       value = xvalue))
   }
 }
+
+nrow(waterdata) # 98817
+nrow(waterdata2) # 10411
 waterdata <- rbind(waterdata, waterdata2)
+nrow(waterdata) # 150872
+save(waterdata, file="data/HPT/org_waterdata.RData")
 
 # Load the downloaded Water level csv and Station list csv
-waterlevel <- read.csv("df.waterlevel.csv")
-dam_stationlist <- read.csv("Station_lat_lng.csv")
+
+# waterlevel <- read.csv("df.waterlevel.csv")
+# dam_stationlist <- read.csv("Station_lat_lng.csv")
+# nrow(waterlevel) # 109228
+
+waterlevel <- read.csv("waterdata.csv")
+dam_stationlist <- read.csv("dam_station_list.csv")
 nrow(waterlevel) # 109228
+nrow(dam_stationlist) #572
+# Check the count of each stationId 
+dam_list_check <- dam_stationlist %>% 
+  group_by(station_id) %>% 
+  summarise(count=n()) %>% 
+  arrange(desc(count))
+dam_list_check
+
+unique_station_id_list <- dam_stationlist %>% 
+  distinct(station_id, .keep_all = TRUE)
+nrow(unique_station_id_list) # 561
+head(unique_station_id_list)
+str(unique_station_id_list)
 
 # Join Water Data and Station Data
 water_stn <- waterlevel %>% 
- inner_join(dam_stationlist, by= c("station_id" = "station_id")) %>% 
+ left_join(unique_station_id_list, by= c("station_id" = "station_id")) %>% 
   mutate(date = as.Date(date, '%Y-%m-%d'))
+nrow(water_stn) # 109228
+head(water_stn)
 
 water_stn$station_url <- NULL
 head(water_stn)
 water_stn$lng.x <- NULL
 
 # Merge with SA4 Data
+<<<<<<< HEAD
 water_stn$territory_sa4 <- ASGS::latlon2SA(water_stn$lat.y, water_stn$lng.y, to = "SA4", yr = "2016")
 water_sa4 <- water_stn
 head(water_stn)
 # Merge with Unemployment Data
+=======
+water_stn$territory_sa4 <- ASGS::latlon2SA(water_stn$lat, water_stn$lng, to = "SA4", yr = "2016")
+nrow(water_stn) # 109288
+water_sa4 <- water_stn
+
+#  Renaming the terriorities
+>>>>>>> 6927eee96fca1a92b8fac91fab35934d44f1efee
 water_sa4$territory_sa4 <- as.character(water_sa4$territory_sa4)
-water_sa4 %>% filter(str_detect(territory_sa4, "Grater Hobart"))
+# water_sa4 %>% filter(str_detect(territory_sa4, "Grater Hobart"))
 
 unemploy_sa4 <- c("Greater Hobart","New South Wales - Central West","Victoria - North West",
   "Western Australia - Outback (North and South)","Western Australia - Outback (North and South)",
@@ -91,7 +124,39 @@ str(watert)
 for(i in 1:length(water_sa4)){
   water_sa4$territory_sa4[water_sa4$territory_sa4 == waterlevel_sa4[i]] <- unemploy_sa4[i]
 }
+<<<<<<< HEAD
 nrow(water_sa4)
+=======
+# Save water_sa4
+nrow(water_sa4) # 109228
+save(water_sa4, file="data/HPT/water_sa4.RData")
+
+# Before merging with Unemployment
+# Check are there any terriorities which has more than one station
+head(water_sa4)
+unique(water_sa4$station_id) # 600 stations
+terr_damstn_count <- water_sa4 %>% 
+  select(territory_sa4, station_id) %>% 
+  distinct() %>% 
+  group_by(territory_sa4) %>%
+  summarise(damstn_count = n()) %>%
+  arrange(desc(damstn_count)) 
+nrow(terr_damstn_count) # 60 Terr
+head(terr_damstn_count)
+# Get SA4 list
+pure_sa4_list <- unemployment %>% 
+  select(territory_sa4) %>% 
+  distinct()
+pure_sa4_list # 87 
+# Check the missing 
+lookup_missing_terr_damstn <- pure_sa4_list %>% 
+  left_join(terr_damstn_count, by=c("territory_sa4"= "territory_sa4"))
+View(lookup_missing_terr_damstn)
+save(lookup_missing_terr_damstn, file="data/HPT/dam_stn_count_by_terriority.csv")
+
+
+
+>>>>>>> 6927eee96fca1a92b8fac91fab35934d44f1efee
 # Going to merge with Unemployment Data
 load("data/unemployment.RData")
 # Identidied the extra space at the end of unemployment$terriority_sa2 and Trimming it
@@ -99,9 +164,14 @@ load("data/unemployment.RData")
 # unique(water_sa4$territory_sa4) # unique(unemployment$territory_sa4)
 unemployment$territory_sa4 <- str_trim(unemployment$territory_sa4, side="both")
 
+
+
+
+
 # Actual Merging with Unemployment data using left_join
 water_unemployment <- unemployment %>% 
   left_join(water_sa4, by=c("territory_sa4" = "territory_sa4", "date" = "date"))
+head(water_unemployment)
 
 # Aggreate by SA4 and date for Average Water Level and Unemployment Rate
 water_unemployment <- water_unemployment %>% 
