@@ -143,7 +143,7 @@ pure_sa4_list # 87
 lookup_missing_terr_damstn <- pure_sa4_list %>% 
   left_join(terr_damstn_count, by=c("territory_sa4"= "territory_sa4"))
 View(lookup_missing_terr_damstn)
-save(lookup_missing_terr_damstn, file="data/HPT/dam_stn_count_by_terriority.xlsx")
+write.csv(lookup_missing_terr_damstn, file="data/HPT/dam_stn_count_by_terriority.csv")
 
 
 # Going to merge with Unemployment Data
