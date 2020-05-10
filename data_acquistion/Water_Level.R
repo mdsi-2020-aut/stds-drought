@@ -154,9 +154,6 @@ load("data/unemployment.RData")
 unemployment$territory_sa4 <- str_trim(unemployment$territory_sa4, side="both")
 
 
-
-
-
 # Actual Merging with Unemployment data using left_join
 water_unemployment <- unemployment %>% 
   left_join(water_sa4, by=c("territory_sa4" = "territory_sa4", "date" = "date"))
@@ -172,3 +169,11 @@ save(water_unemployment, file="data/unemployment_water.RData")
 
 # nrow(water_unemployment) # 21489
 # View(water_unemployment)
+
+# Check missing data count by terriority and period
+View(water_unemployment)
+missing_check_water_unemp <- water_unemployment %>% 
+  filter(is.na(waterlevel_mean)) %>% 
+  group_by(territory_sa4) %>% 
+  summarise(missing_count = n(), max_date= max(date), min_date=min(date))
+write.csv(missing_check_water_unemp, file="data/HPT/missing_check_water_unemp.csv")
