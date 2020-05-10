@@ -85,7 +85,7 @@ for(i in 1:length(evaporation_sa4)){
 nrow(evap_sa4) # 14337
 save(evap_sa4, file="data/evap_sa4.RData")
 
-# Identidied the extra space at the end of unemployment$terriority_sa2 and Trimming it
+# Identified the extra space at the end of unemployment$terriority_sa2 and Trimming it
 # "Darwin " in ubemployment, "Darwin" in evap_sa4
 unique(evap_sa4$territory_sa4) # 29 terriority
 unique(unemployment$territory_sa4)
@@ -93,10 +93,26 @@ unemployment$territory_sa4 <- str_trim(unemployment$territory_sa4, side="both")
 
 # Check are there any terriorities which has more than one station
 head(evap_sa4)
-aaaa <- evap_sa4 %>% 
-  group_by(territory_sa4, data) %>% 
-  summerise(count)
-  
+unique(evap_sa4$stationid) # 60 stations
+terr_stn_count <- evap_sa4 %>% 
+  select(territory_sa4, stationid) %>% 
+  distinct() %>% 
+  group_by(territory_sa4) %>%
+  summarise(evap_stn_count = n()) %>%
+  arrange(desc(evap_stn_count)) 
+nrow(terr_stn_count) # 29 Terr have more than one station
+head(terr_stn_count)
+# Get SA4 list
+pure_sa4_list <- unemployment %>% 
+  select(territory_sa4) %>% 
+  distinct()
+pure_sa4_list # 87 
+# Check the missing 
+lookup_missing <- pure_sa4_list %>% 
+  left_join(terr_stn_count, by=c("territory_sa4"= "territory_sa4"))
+View(lookup_missing)
+save(lookup_missing, file="data/HPT/evap_stn_count_by_terriority.csv")
+
 
 # Merge with Unemployment Data
 evap_unemployment <- unemployment %>% 
@@ -113,8 +129,9 @@ evap_unemployment <- evap_unemployment %>%
 save(evap_unemployment, file="data/unemployment_evap.RData")
 
 
+
 # Extra Checking - Optional
-head(evap_unemployment) # 21489
+nrow(evap_unemployment) # 21489
 precp_sa4 %>% filter(str_detect(territory_sa4,"^Australian Capital Territory"))
 
 

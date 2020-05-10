@@ -40,6 +40,7 @@ for (filename in bom_precip_monthly_list) {
  
 }
 save(precipitation_df, file="data/org_precp.RData")
+load("data/org_precp.RData")
 sum(is.na(precipitation_df$V3)) 
 precp_missing_value_percentage = sum(is.na(precipitation_df$V3))/nrow(precipitation_df)
 precp_missing_value_percentage # 0 m,v
@@ -94,6 +95,34 @@ sum(is.na(precp_sa4$precp)) # zero missing
 unique(precp_sa4$territory_sa4) 
 unique(unemployment$territory_sa4)
 unemployment$territory_sa4 <- str_trim(unemployment$territory_sa4, side="both")
+save("precp_sa4", file="data/precp_sa4.RData")
+
+
+# To Check are there any terriorities which has more than one station, count stn Id by terriority
+head(precp_sa4)
+unique(precp_sa4$stationid) # 307 stations
+terr_precp_stn_count <- precp_sa4 %>% 
+  select(territory_sa4, stationid) %>% 
+  distinct() %>% 
+  group_by(territory_sa4) %>%
+  summarise(precp_stn_count = n()) %>%
+  arrange(desc(precp_stn_count)) 
+nrow(terr_precp_stn_count) # 45 Terr have more than one station
+View(terr_precp_stn_count)
+# Get SA4 list
+pure_sa4_list <- unemployment %>% 
+  select(territory_sa4) %>% 
+  distinct()
+pure_sa4_list # 87 
+# Check the count of station in each terriority and identify which terriorities have no station 
+lookup_missing_terr_precpstn <- pure_sa4_list %>% 
+  left_join(terr_precp_stn_count, by=c("territory_sa4"= "territory_sa4"))
+View(lookup_missing_terr_precpstn)
+save(lookup_missing_terr_precpstn, file="data/HPT/precp_stn_count_by_terriority.csv")
+
+
+
+
 
 # Merge with Unemployment Data
 load("data/unemployment.RData")
@@ -106,10 +135,12 @@ head(precp_unemployment)
 precp_unemployment <- precp_unemployment %>% 
   group_by(territory_sa4, date) %>% 
   summarise(precp_mean = mean(precp), unemployment_rate = mean(unemployment_rate))
-nrow(precp_unemployment) # 21489
+nrow(precp_unemployment) # 
 
 save(precp_unemployment, file="data/unemployment_precp.RData")
 sum(is.na(precp_unemployment$precp_mean)) # 1151
+
+
 
 # Extra Checking - Optional
 View(precp_unemployment)
