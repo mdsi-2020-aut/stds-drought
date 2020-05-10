@@ -40,13 +40,14 @@ for (filename in bom_evap_monthly_list) {
   evap_df <- rbind(evap_df,onestation_df)
 }
 nrow(evap_df) #33122
+save(evap_df, file="data/org_evap.RData")
 
 # bom_evap_stn_list$station_id is factor and precipitation_df$stationid is character
 bom_evap_stn_list$station_id <- as.character(bom_evap_stn_list$station_id)
 # Join Evaporation Dataframe with station Dataframe by stationid
 evap_stn <- evap_df %>% 
   inner_join(bom_evap_stn_list, by= c("stationid" = "station_id"))
-head(evap_stn)
+nrow(evap_stn) #33122
 
 # Reformat the date (V1, V2) from strin to "1999-09-01" in Sync with date in Unemployment Data
 colnames(evap_stn) <- c("from", "to", "evap", "stationid", "lat","long", "elv","stationname")
@@ -55,7 +56,7 @@ colnames(evap_stn) <- c("from", "to", "evap", "stationid", "lat","long", "elv","
 evap_stn <- evap_stn %>% 
   mutate(from = as.Date(as.character(from), '%Y%m%d')) %>% 
   mutate(to = as.Date(as.character(to), '%Y%m%d'))
-head(evap_stn)
+nrow(evap_stn) #33122
 
 #filter out the records prior to 1990
 evap_stn <- evap_stn %>%
@@ -81,13 +82,22 @@ load("data/unemployment.RData")
 for(i in 1:length(evaporation_sa4)){
   evap_sa4$territory_sa4[evap_sa4$territory_sa4 == evaporation_sa4[i]] <- unemploy_sa4[i]
 }
-head(evap_sa4) # 14337
+nrow(evap_sa4) # 14337
+save(evap_sa4, file="data/evap_sa4.RData")
 
 # Identidied the extra space at the end of unemployment$terriority_sa2 and Trimming it
 # "Darwin " in ubemployment, "Darwin" in evap_sa4
 unique(evap_sa4$territory_sa4) # 29 terriority
 unique(unemployment$territory_sa4)
 unemployment$territory_sa4 <- str_trim(unemployment$territory_sa4, side="both")
+
+# Check are there any terriorities which has more than one station
+head(evap_sa4)
+aaaa <- evap_sa4 %>% 
+  group_by(territory_sa4, data) %>% 
+  summerise(count)
+  
+
 # Merge with Unemployment Data
 evap_unemployment <- unemployment %>% 
   left_join(evap_sa4, by=c("territory_sa4" = "territory_sa4", "date" = "from"))
