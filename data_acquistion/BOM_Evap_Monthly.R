@@ -114,9 +114,11 @@ View(lookup_missing)
 write.csv(lookup_missing, file="data/HPT/evap_stn_count_by_terriority.csv")
 
 # Check any station which has partial data
+View(evap_sa4)
 partial_missing_data <- evap_sa4 %>% 
-  filter(is.null(evap)) %>% 
-  group_by(stationid, from,to)
+  filter(is.na(evap)) %>% 
+  group_by(stationid, territory_sa4) %>% 
+  summarise(missing_count = n())
 View(partial_missing_data)
 
 # Merge with Unemployment Data
@@ -133,10 +135,18 @@ evap_unemployment <- evap_unemployment %>%
 # Save the finalised merged Evaporation ~ Unemployment data into R
 save(evap_unemployment, file="data/unemployment_evap.RData")
 
-
-
 # Extra Checking - Optional
 nrow(evap_unemployment) # 21489
-precp_sa4 %>% filter(str_detect(territory_sa4,"^Australian Capital Territory"))
+evap_sa4 %>% filter(str_detect(territory_sa4,"^Australian Capital Territory"))
+
+# Check missing data count by terriority and period
+View(evap_unemployment)
+missing_check_evap_unemp <- evap_unemployment %>% 
+  filter(is.na(evap_mean)) %>% 
+  group_by(territory_sa4) %>% 
+  summarise(missing_count = n(), max_date= max(date), min_date=min(date))
+write.csv(missing_check_evap_unemp, file="data/HPT/missing_check_evap_unemp.csv")
+
+
 
 

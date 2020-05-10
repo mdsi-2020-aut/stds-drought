@@ -138,10 +138,17 @@ save(precp_unemployment, file="data/unemployment_precp.RData")
 sum(is.na(precp_unemployment$precp_mean)) # 1151
 
 
-
 # Extra Checking - Optional
 View(precp_unemployment)
 precp_sa4 %>% filter(str_detect(territory_sa4,"^Australian Capital Territory"))
 tail(unemployment)
+
+# Check missing data count by terriority and period
+View(precp_unemployment)
+missing_check_precp_unemp <- precp_unemployment %>% 
+  filter(is.na(precp_mean)) %>% 
+  group_by(territory_sa4) %>% 
+  summarise(missing_count = n(), max_date= max(date), min_date=min(date))
+write.csv(missing_check_precp_unemp, file="data/HPT/missing_check_precp_unemp.csv")
 
 

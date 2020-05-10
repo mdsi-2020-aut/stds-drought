@@ -1,0 +1,87 @@
+"","territory_sa4","missing_count","max_date","min_date"
+"1","Adelaide - Central and Hills",47,2019-12-01,2009-06-01
+"2","Adelaide - North",106,2019-12-01,2006-06-01
+"3","Adelaide - South",30,2019-10-01,2009-06-01
+"4","Adelaide - West",247,2020-03-01,1999-09-01
+"5","Australian Capital Territory",69,2018-10-01,1999-09-01
+"6","Ballarat",237,2020-03-01,1999-09-01
+"7","Barossa - Yorke - Mid North",57,2019-12-01,2009-06-01
+"8","Bendigo",135,2020-03-01,1999-10-01
+"9","Brisbane - East",247,2020-03-01,1999-09-01
+"10","Brisbane - North",247,2020-03-01,1999-09-01
+"11","Brisbane - South",120,2011-11-01,1999-09-01
+"12","Brisbane - West",110,2008-10-01,1999-09-01
+"13","Brisbane Inner City",247,2020-03-01,1999-09-01
+"14","Bunbury",77,2020-03-01,2002-07-01
+"15","Cairns",26,2020-03-01,2017-08-01
+"16","Capital Region",7,2020-03-01,2000-01-01
+"17","Central Coast",247,2020-03-01,1999-09-01
+"18","Central Queensland",193,2020-03-01,1999-12-01
+"19","Coffs Harbour - Grafton",247,2020-03-01,1999-09-01
+"20","Darling Downs - Maranoa",80,2020-03-01,1999-10-01
+"21","Darwin",127,2020-02-01,1999-09-01
+"22","Far West and Orana",16,2018-05-01,2010-11-01
+"23","Geelong",9,2017-11-01,2001-05-01
+"24","Gold Coast",122,2012-02-01,1999-09-01
+"25","Greater Hobart",190,2020-03-01,1999-09-01
+"26","Hume",59,2020-03-01,2002-07-01
+"27","Hunter Valley exc Newcastle",247,2020-03-01,1999-09-01
+"28","Illawarra",171,2020-03-01,1999-09-01
+"29","Ipswich",209,2020-03-01,1999-09-01
+"30","Latrobe - Gippsland",27,2019-08-01,2001-08-01
+"31","Launceston and North East",1,2005-09-01,2005-09-01
+"32","Logan - Beaudesert",195,2019-09-01,1999-09-01
+"33","Mackay - Isaac - Whitsunday",158,2019-01-01,1999-09-01
+"34","Mandurah",247,2020-03-01,1999-09-01
+"35","Melbourne - Inner",247,2020-03-01,1999-09-01
+"36","Melbourne - Inner East",247,2020-03-01,1999-09-01
+"37","Melbourne - Inner South",247,2020-03-01,1999-09-01
+"38","Melbourne - North East",22,2019-04-01,2008-04-01
+"39","Melbourne - North West",50,2019-05-01,2008-11-01
+"40","Melbourne - Outer East",10,2018-11-01,2008-10-01
+"41","Melbourne - South East",59,2019-04-01,2007-03-01
+"42","Melbourne - West",10,2019-05-01,2007-02-01
+"43","Mid North Coast",247,2020-03-01,1999-09-01
+"44","Moreton Bay - North",1,2011-09-01,2011-09-01
+"45","Moreton Bay - South",85,2012-02-01,1999-09-01
+"46","Mornington Peninsula",2,2015-10-01,2007-03-01
+"47","Murray",58,2020-02-01,2004-01-01
+"48","New England and North West",113,2017-03-01,2002-09-01
+"49","New South Wales - Central West",8,2019-11-01,2002-09-01
+"50","Newcastle and Lake Macquarie",247,2020-03-01,1999-09-01
+"51","Northern Territory - Outback",247,2020-03-01,1999-09-01
+"52","Perth - Inner",247,2020-03-01,1999-09-01
+"53","Perth - North East",110,2020-03-01,2007-02-01
+"54","Perth - North West",247,2020-03-01,1999-09-01
+"55","Perth - South East",58,2020-03-01,2002-07-01
+"56","Perth - South West",247,2020-03-01,1999-09-01
+"57","Queensland - Outback",5,2017-09-01,2002-08-01
+"58","Riverina",59,2020-03-01,1999-09-01
+"59","Shepparton",53,2020-03-01,2015-08-01
+"60","South Australia - Outback",4,2019-02-01,2008-05-01
+"61","South Australia - South East",78,2020-02-01,1999-12-01
+"62","Southern Highlands and Shoalhaven",171,2020-03-01,1999-09-01
+"63","Sunshine Coast",129,2020-03-01,1999-09-01
+"64","Sydney - Baulkham Hills and Hawkesbury",247,2020-03-01,1999-09-01
+"65","Sydney - Blacktown",153,2020-03-01,1999-09-01
+"66","Sydney - City and Inner South",247,2020-03-01,1999-09-01
+"67","Sydney - Eastern Suburbs",247,2020-03-01,1999-09-01
+"68","Sydney - Inner South West",247,2020-03-01,1999-09-01
+"69","Sydney - Inner West",247,2020-03-01,1999-09-01
+"70","Sydney - North Sydney and Hornsby",247,2020-03-01,1999-09-01
+"71","Sydney - Northern Beaches",247,2020-03-01,1999-09-01
+"72","Sydney - Outer South West",246,2020-03-01,1999-09-01
+"73","Sydney - Outer West and Blue Mountains",172,2020-03-01,1999-09-01
+"74","Sydney - Parramatta",247,2020-03-01,1999-09-01
+"75","Sydney - Ryde",247,2020-03-01,1999-09-01
+"76","Sydney - South West",247,2020-03-01,1999-09-01
+"77","Sydney - Sutherland",247,2020-03-01,1999-09-01
+"78","Tasmania - South East",90,2020-01-01,1999-09-01
+"79","Tasmania - West and North West",22,2015-05-01,2002-12-01
+"80","Toowoomba",247,2020-03-01,1999-09-01
+"81","Townsville",45,2020-03-01,2004-11-01
+"82","Victoria - North West",247,2020-03-01,1999-09-01
+"83","Warrnambool and South West",34,2020-02-01,2002-03-01
+"84","Western Australia - Outback (North and South)",65,2020-03-01,2000-01-01
+"85","Western Australia - Wheat Belt",69,2020-03-01,2002-07-01
+"86","Wide Bay",84,2020-01-01,2002-01-01
