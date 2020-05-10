@@ -97,18 +97,11 @@ head(water_stn)
 water_stn$lng.x <- NULL
 
 # Merge with SA4 Data
-<<<<<<< HEAD
 water_stn$territory_sa4 <- ASGS::latlon2SA(water_stn$lat.y, water_stn$lng.y, to = "SA4", yr = "2016")
 water_sa4 <- water_stn
 head(water_stn)
-# Merge with Unemployment Data
-=======
-water_stn$territory_sa4 <- ASGS::latlon2SA(water_stn$lat, water_stn$lng, to = "SA4", yr = "2016")
-nrow(water_stn) # 109288
-water_sa4 <- water_stn
 
 #  Renaming the terriorities
->>>>>>> 6927eee96fca1a92b8fac91fab35934d44f1efee
 water_sa4$territory_sa4 <- as.character(water_sa4$territory_sa4)
 # water_sa4 %>% filter(str_detect(territory_sa4, "Grater Hobart"))
 
@@ -124,9 +117,7 @@ str(watert)
 for(i in 1:length(water_sa4)){
   water_sa4$territory_sa4[water_sa4$territory_sa4 == waterlevel_sa4[i]] <- unemploy_sa4[i]
 }
-<<<<<<< HEAD
-nrow(water_sa4)
-=======
+
 # Save water_sa4
 nrow(water_sa4) # 109228
 save(water_sa4, file="data/HPT/water_sa4.RData")
@@ -156,7 +147,6 @@ save(lookup_missing_terr_damstn, file="data/HPT/dam_stn_count_by_terriority.csv"
 
 
 
->>>>>>> 6927eee96fca1a92b8fac91fab35934d44f1efee
 # Going to merge with Unemployment Data
 load("data/unemployment.RData")
 # Identidied the extra space at the end of unemployment$terriority_sa2 and Trimming it
