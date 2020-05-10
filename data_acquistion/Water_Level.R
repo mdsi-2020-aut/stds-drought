@@ -58,9 +58,9 @@ for(obs in observation2){
 waterdata <- rbind(waterdata, waterdata2)
 
 # Load the downloaded Water level csv and Station list csv
-waterlevel <- read.csv("waterdata.csv")
-dam_stationlist <- read.csv("dam_station_list.csv")
-# nrow(waterlevel) # 109228
+waterlevel <- read.csv("df.waterlevel.csv")
+dam_stationlist <- read.csv("Station_lat_lng.csv")
+nrow(waterlevel) # 109228
 
 # Join Water Data and Station Data
 water_stn <- waterlevel %>% 
@@ -68,12 +68,13 @@ water_stn <- waterlevel %>%
   mutate(date = as.Date(date, '%Y-%m-%d'))
 
 water_stn$station_url <- NULL
-tail(water_stn)
+head(water_stn)
+water_stn$lng.x <- NULL
 
 # Merge with SA4 Data
-water_stn$territory_sa4 <- ASGS::latlon2SA(water_stn$lat, water_stn$lng, to = "SA4", yr = "2016")
+water_stn$territory_sa4 <- ASGS::latlon2SA(water_stn$lat.y, water_stn$lng.y, to = "SA4", yr = "2016")
 water_sa4 <- water_stn
-
+head(water_stn)
 # Merge with Unemployment Data
 water_sa4$territory_sa4 <- as.character(water_sa4$territory_sa4)
 water_sa4 %>% filter(str_detect(territory_sa4, "Grater Hobart"))
@@ -84,11 +85,13 @@ unemploy_sa4 <- c("Greater Hobart","New South Wales - Central West","Victoria - 
 
 waterlevel_sa4 <- c("Hobart","Central West","North West","Western Australia - Outback (North)",
   "Western Australia - Outback (South)","South East","West and North West")
+str(watert)
+
 # Renaming
-for(i in 1:length(rainfall_sa4)){
+for(i in 1:length(water_sa4)){
   water_sa4$territory_sa4[water_sa4$territory_sa4 == waterlevel_sa4[i]] <- unemploy_sa4[i]
 }
-
+nrow(water_sa4)
 # Going to merge with Unemployment Data
 load("data/unemployment.RData")
 # Identidied the extra space at the end of unemployment$terriority_sa2 and Trimming it
@@ -110,6 +113,3 @@ save(water_unemployment, file="data/unemployment_water.RData")
 
 # nrow(water_unemployment) # 21489
 # View(water_unemployment)
-
-
-
