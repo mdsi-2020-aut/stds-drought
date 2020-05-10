@@ -111,7 +111,7 @@ pure_sa4_list # 87
 lookup_missing <- pure_sa4_list %>% 
   left_join(terr_stn_count, by=c("territory_sa4"= "territory_sa4"))
 View(lookup_missing)
-save(lookup_missing, file="data/HPT/evap_stn_count_by_terriority.xlsx")
+write.csv(lookup_missing, file="data/HPT/evap_stn_count_by_terriority.csv")
 
 # Check any station which has partial data
 partial_missing_data <- evap_sa4 %>% 
