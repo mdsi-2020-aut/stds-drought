@@ -1,10 +1,7 @@
 load("./data/unemploy_seifa.RData")
 load("./data/unemployment.RData")
-load("./data/unemployment_evap.RData")
-load("./data/unemployment_precp.RData")
 load("./data/unemployment_proficiency.RData")
 load("./data/unemployment_remote.RData")
-load("./data/unemployment_water.RData")
 
 library(tidyverse)
 
@@ -12,9 +9,7 @@ glimpse(unemployment)
 glimpse(unemploy_seifa)
 glimpse(unemployment_RAPopWtd)
 glimpse(unemployment_proficiency)
-glimpse(water_unemployment)
-glimpse(precp_unemployment)
-glimpse(evap_unemployment)
+
 
 #remove extra spaces in the unemployment SA4 name
 unemployment$territory_sa4 <- str_trim(unemployment$territory_sa4, side="both")
@@ -26,13 +21,13 @@ master_social_good <- unemployment %>%
   left_join(unemployment_RAPopWtd %>% select(-c(unemployed,population)), by=c("territory_sa4","date")) %>%
   rename("remoteness_index" = "PopWtdRA_rank") %>%
   left_join(unemployment_proficiency %>% select(-c(unemployed,population)), by=c("territory_sa4","date")) %>%
-  left_join(water_unemployment %>% select(-c(unemployed,population)), by=c("territory_sa4","date")) %>%
-  left_join(precp_unemployment %>% select(-c(unemployed,population)), by=c("territory_sa4","date")) %>%
-  left_join(evap_unemployment %>% select(-c(unemployed,population)), by=c("territory_sa4","date")) %>%
-  mutate(Year = NULL)
+  mutate(Year = NULL) %>% 
+  filter(date >= "2006-01-01")
 
 summary(master_social_good)
 glimpse(master_social_good %>% filter(date > "2006-01-01"))
+
+View(master_social_good[!complete.cases(master_social_good),])
 
 #check join result
 #check are there any missing value
@@ -54,12 +49,6 @@ tibble(columns = names(unemployment %>% select(-date)),
                    values = 100 - colSums(!is.na(unemployment_RAPopWtd %>% select(-date)))*100/nrow(unemployment_RAPopWtd))) %>%
   bind_rows(tibble(columns = names(unemployment_proficiency %>% select(-date)), 
                    values = 100 - colSums(!is.na(unemployment_proficiency %>% select(-date)))*100/nrow(unemployment_proficiency))) %>%
-  bind_rows(tibble(columns = names(water_unemployment %>% select(-date)), 
-                   values = 100 - colSums(!is.na(water_unemployment %>% select(-date)))*100/nrow(water_unemployment))) %>%
-  bind_rows(tibble(columns = names(precp_unemployment %>% select(-date)), 
-                   values = 100 - colSums(!is.na(precp_unemployment %>% select(-date)))*100/nrow(precp_unemployment))) %>%
-  bind_rows(tibble(columns = names(evap_unemployment %>% select(-date)), 
-                   values = 100 - colSums(!is.na(evap_unemployment %>% select(-date)))*100/nrow(evap_unemployment))) %>%
   inner_join(tibble(join_columns = names(master_social_good %>% select(-date)), 
                     join_values = 100 - colSums(!is.na(master_social_good %>% select(-date)))*100/nrow(master_social_good)),by=c("columns"="join_columns")) %>%
   filter(join_values != values) %>%
@@ -68,19 +57,13 @@ tibble(columns = names(unemployment %>% select(-date)),
 
 #check if mean is consistent in join result
 check_mean <- unemployment %>% select(c(unemployed,population)) %>% group_by() %>%
-  summarise(c(unemployed,population) = mean(c(unemployed,population))) %>%
+  summarise(unemployed = mean(unemployed)) %>%
   bind_cols(unemploy_seifa %>% select(-c(unemployed,population), -Year) %>% group_by() %>%
               summarise_if(is.numeric, funs(mean(., na.rm = T)))) %>%
   bind_cols(unemployment_RAPopWtd %>% select(-c(unemployed,population)) %>% group_by() %>%
               summarise_if(is.numeric, funs(mean(., na.rm = T)))) %>%
   bind_cols(unemployment_proficiency %>% select(-c(unemployed,population), -census_year) %>% group_by() %>%
-              summarise_if(is.numeric, funs(mean(., na.rm = T)))) %>%
-  bind_cols(water_unemployment %>% select(-c(unemployed,population)) %>% group_by() %>%
-              summarise_if(is.numeric, funs(mean(., na.rm = T)))) %>%
-  bind_cols(precp_unemployment %>% select(-c(unemployed,population)) %>% group_by() %>%
-              summarise_if(is.numeric, funs(mean(., na.rm = T)))) %>%
-  bind_cols(evap_unemployment %>% select(-c(unemployed,population)) %>% group_by() %>%
-              summarise_if(is.numeric, funs(mean(., na.rm = T))))
+              summarise_if(is.numeric, funs(mean(., na.rm = T)))) 
 
 tibble(columns = names(check_mean), 
        values = colSums(check_mean)) %>%

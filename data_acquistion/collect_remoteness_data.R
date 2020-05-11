@@ -161,12 +161,24 @@ SA4_RAPopWd <- SA1_4_POP_RA_SumPop_PopW_RATypeRankWghtd %>%
 SA4_RAPopWd
 SA4_RAPopWd %>% print(n = 100)
 
+
+#Correct some names
+unemploy_sa4 <- c("Greater Hobart","New South Wales - Central West","Victoria - North West",
+                  "Western Australia - Outback (North and South)","Western Australia - Outback (North and South)",
+                  "Tasmania - South East","Tasmania - West and North West")
+rem_sa4 <- c("Hobart","Central West","North West","Western Australia - Outback (North)",
+              "Western Australia - Outback (South)","South East","West and North West")
+
+for(i in 1:length(prof_sa4)){
+  SA4_RAPopWd$SA4_name[SA4_RAPopWd$SA4_name == rem_sa4[i]] <- unemploy_sa4[i]
+}
+
 #Join PopWtdRA_rank to Unemployment data
 unemployment$territory_sa4 = str_trim(unemployment$territory_sa4, side = "both")
 unemployment_RAPopWtd <- left_join(unemployment, SA4_RAPopWd, by = c("territory_sa4" = "SA4_name"))
 glimpse(unemployment_RAPopWtd)
 
-glimpse(unemployment_RAPopWtd)
+summary(unemployment_RAPopWtd)
 distinct(unemployment_RAPopWtd)
 
 save(unemployment_RAPopWtd, file = "data/unemployment_remote.RData")
