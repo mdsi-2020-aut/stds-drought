@@ -74,9 +74,10 @@ proficiency_sa4$REGIONTYPE <- NULL
 proficiency_sa4$TIME_FORMAT <- NULL
 
 #convert period to integer
+proficiency_sa4 <- proficiency_sa4 %>% rename("SA4_CODE" = "ASGS_2016","PERIOD" = "obsTime")
+
 proficiency_sa4$PERIOD <- as.integer(proficiency_sa4$PERIOD)
 
-proficiency_sa4 <- proficiency_sa4 %>% rename("SA4_CODE" = "ASGS_2016","PERIOD" = "obsTime")
 
 #rearrange the column
 proficiency_sa4 <- proficiency_sa4[,c(1,8,7,5,6,2,4,3)] 
@@ -158,10 +159,10 @@ prof_sa4 <- c("Hobart","Central West","North West","Western Australia - Outback 
 for(i in 1:length(prof_sa4)){
   proficiency_sa4$SA4_NAME[proficiency_sa4$SA4_NAME == prof_sa4[i]] <- unemploy_sa4[i]
 }
-
+load('data/unemployment.RData')
 #check if there are SA4 Area that is not available unemployment (vice versa)
 unemployment$territory_sa4 = str_trim(unemployment$territory_sa4,side = "both")
-prof_to_unemploy <- proficiency_sa4_summary %>% left_join(unemployment, by=c("SA4_NAME"="territory_sa4")) %>% filter(is.na(unemployment_rate)) %>% select(SA4_NAME, unemployment_rate)  
+prof_to_unemploy <- proficiency_sa4_summary %>% left_join(unemployment, by=c("SA4_NAME"="territory_sa4")) %>% filter(is.na(unemployed)) %>% select(SA4_NAME, unemployed,population)  
 unique(prof_to_unemploy$SA4_NAME)
 unemploy_to_prof <- unemployment %>% left_join(proficiency_sa4_summary, by=c("territory_sa4" = "SA4_NAME")) %>% filter(is.na(ENGLISH_ONLY)) %>% select(territory_sa4, ENGLISH_ONLY)  
 unique(unemploy_to_prof$territory_sa4)
@@ -177,3 +178,5 @@ glimpse(proficiency_sa4)
 
 
 save(unemployment_proficiency, proficiency_sa4, proficiency_sa4_summary, file = "data/unemployment_proficiency.RData")
+
+

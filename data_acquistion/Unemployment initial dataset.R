@@ -9,7 +9,7 @@
 
 ### Clean current environment and set the working directory
 rm(list = ls())
-setwd('~/UTS/STDS/AT2/stds-drought')
+#setwd('~/UTS/STDS/AT2/stds-drought')
 
 ### Install and/or load libraries to be used
 #install.packages(c('raustats','ggplot2','dplyr','stringr','scales','ASGS') #To install all required libraries
@@ -34,10 +34,10 @@ labour_abs <- abs_cat_stats("6291.0.55.001", tables="Table.+16b\\D")
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
 
 #### FILTER DATA ####
-
-### Target variable: "Unemployment rate ;  Persons"
+### Getting unemployed total
+### Target variable: "Unemployed total ;  Persons"
 unemployment <- labour_abs %>% 
-  filter(grepl("Unemployment rate ;  Persons", data_item_description, ignore.case=TRUE)) 
+  filter(grepl("Unemployed total ;  Persons", data_item_description, ignore.case=TRUE)) 
 
 ### unemployment description
 warning(paste0("UNEMPLOYMENT unemployment INFORMATION","\n",
@@ -54,10 +54,10 @@ warning(paste0("UNEMPLOYMENT unemployment INFORMATION","\n",
                "Freq: ",unique(unemployment$freq),"\n",
                "Unit: ",unique(unemployment$unit)))
 
-### Relevant variables
+### Relevant variables -we trunacate the unemployed value
 unemployment <- unemployment %>% 
   select(date,value,data_item_description) %>% 
-  rename(unemployment_rate = value) %>% 
+  mutate(unemployed = trunc(value*1000)) %>% 
   filter(grepl(">>>|Australian|Hobart", data_item_description, ignore.case=TRUE)) %>% # SA4 geographical divisions can be identified by ">>>"
   mutate(territory_sa4 = str_replace_all(word(data_item_description,1,sep = "\\;"),'>>> |>> |> ',''))
 
@@ -66,12 +66,48 @@ uniques_sa4 <- unemployment %>% select(data_item_description,territory_sa4) %>% 
 uniques_sa4$territory_sa4
 nrow(uniques_sa4)
 
+
 ### unemployment
 unemployment <- unemployment %>% 
-  select(date,unemployment_rate,territory_sa4)
+  select(date,unemployed,territory_sa4)
+
+
+
+### Getting population
+### First get employemnt to population ratio
+### Target variable: "Employed to population ratio ;  Persons"
+employ_rat <- labour_abs %>% 
+  filter(grepl("Employed to population ratio ;  Persons", data_item_description, ignore.case=TRUE)) %>% 
+  select(date,value,data_item_description) %>% 
+  mutate(employment_pop_ratio = value/100) %>% 
+  filter(grepl(">>>|Australian|Hobart", data_item_description, ignore.case=TRUE)) %>% # SA4 geographical divisions can be identified by ">>>"
+  mutate(territory_sa4 = str_replace_all(word(data_item_description,1,sep = "\\;"),'>>> |>> |> ','')) %>% 
+  select(date,employment_pop_ratio,territory_sa4)
+
+
+### Now get employment numbers
+### Target variable: "Employed total ;  Persons"
+employ_pop <- labour_abs %>% 
+  filter(grepl(" Employed total ;  Persons", data_item_description, ignore.case=TRUE)) %>% 
+  select(date,value,data_item_description) %>% 
+  mutate(employed = trunc(value*1000)) %>% 
+  filter(grepl(">>>|Australian|Hobart", data_item_description, ignore.case=TRUE)) %>% # SA4 geographical divisions can be identified by ">>>"
+  mutate(territory_sa4 = str_replace_all(word(data_item_description,1,sep = "\\;"),'>>> |>> |> ','')) %>% 
+  select(date,employed,territory_sa4)
+
+
+###Join tables together and divide to get pop
+pop <- employ_pop %>% 
+  inner_join(employ_rat) %>% 
+  mutate(population = trunc(employed/employment_pop_ratio))
+
+###And join all tables
+unemployment <- unemployment %>% 
+  inner_join(pop) %>% 
+  select(date,unemployed,population,territory_sa4)
 
 ### Save R object
-#save(unemployment,file="~/UTS/STDS/AT2/stds-drought/data/unemployment.RData")
+save(unemployment,file="data/unemployment.RData")
 
 #### VISUALISATION ####
 

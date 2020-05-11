@@ -24,15 +24,15 @@ library(tidyverse)
 library(raustats)
 
 # Read (from data) ABS excel download of 2016 Remoteness data
-RA_2016_AUST <- read_excel("Data/RA_2016_AUST.xlsx")
+RA_2016_AUST <- read_excel("data/RA_2016_AUST.xlsx")
 glimpse(RA_2016_AUST)
 
 # Read (from data) ABS excel download of 2011-19 population data
-POP_AUST <- read_excel("Data/POP_AUST.xlsx")
+POP_AUST <- read_excel("data/POP_AUST.xlsx")
 glimpse(POP_AUST)
 
 # Read (from data) ABS SA1-to-SA4 csv data
-SA1_4 <- read_csv("Data/SA1_2016_AUST.csv")
+SA1_4 <- read_csv("data/SA1_2016_AUST.csv")
 glimpse(SA1_4)
 distinct(SA1_4, SA4_NAME_2016)
 
@@ -168,3 +168,5 @@ glimpse(unemployment_RAPopWtd)
 
 glimpse(unemployment_RAPopWtd)
 distinct(unemployment_RAPopWtd)
+
+save(unemployment_RAPopWtd, file = "data/unemployment_remote.RData")
