@@ -40,7 +40,7 @@ for (filename in bom_evap_monthly_list) {
   evap_df <- rbind(evap_df,onestation_df)
 }
 nrow(evap_df) #33122
-save(evap_df, file="data/org_evap.RData")
+save(evap_df, file="data/HPT/org_evap.RData")
 
 # bom_evap_stn_list$station_id is factor and precipitation_df$stationid is character
 bom_evap_stn_list$station_id <- as.character(bom_evap_stn_list$station_id)
@@ -48,6 +48,7 @@ bom_evap_stn_list$station_id <- as.character(bom_evap_stn_list$station_id)
 evap_stn <- evap_df %>% 
   inner_join(bom_evap_stn_list, by= c("stationid" = "station_id"))
 nrow(evap_stn) #33122
+save(evap_stn,file ="data/HPT/bom_evap_stn_org.RData")
 
 # Reformat the date (V1, V2) from strin to "1999-09-01" in Sync with date in Unemployment Data
 colnames(evap_stn) <- c("from", "to", "evap", "stationid", "lat","long", "elv","stationname")
