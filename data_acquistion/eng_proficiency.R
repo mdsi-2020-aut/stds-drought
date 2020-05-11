@@ -157,7 +157,7 @@ prof_sa4 <- c("Hobart","Central West","North West","Western Australia - Outback 
          "Western Australia - Outback (South)","South East","West and North West")
 
 for(i in 1:length(prof_sa4)){
-  proficiency_sa4$SA4_NAME[proficiency_sa4$SA4_NAME == prof_sa4[i]] <- unemploy_sa4[i]
+  proficiency_sa4_summary $SA4_NAME[proficiency_sa4_summary $SA4_NAME == prof_sa4[i]] <- unemploy_sa4[i]
 }
 load('data/unemployment.RData')
 #check if there are SA4 Area that is not available unemployment (vice versa)
@@ -170,12 +170,14 @@ unique(unemploy_to_prof$territory_sa4)
 #add column to unemployment
 unemployment <- unemployment %>% mutate(census_year = (5*floor((year(date)-1)/5))+1)
 
+
 #join unemployment with english proficiency
-unemployment_proficiency <- unemployment %>% left_join(proficiency_sa4_summary, by=c("territory_sa4" = "SA4_NAME","census_year"="PERIOD"))
+unemployment_proficiency <- unemployment %>% left_join(proficiency_sa4_summary, by=c("territory_sa4" = "SA4_NAME","census_year"="PERIOD")) %>% 
+    filter(census_year >=2006)
 
 glimpse(unemployment)
 glimpse(proficiency_sa4)
-
+View(unemployment_proficiency[!complete.cases(unemployment_proficiency),])
 
 save(unemployment_proficiency, proficiency_sa4, proficiency_sa4_summary, file = "data/unemployment_proficiency.RData")
 
