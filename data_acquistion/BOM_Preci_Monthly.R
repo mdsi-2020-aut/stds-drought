@@ -39,8 +39,7 @@ for (filename in bom_precip_monthly_list) {
   precipitation_df <- rbind(precipitation_df,onestation_df)
  
 }
-save(precipitation_df, file="data/org_precp.RData")
-load("data/org_precp.RData")
+save(precipitation_df, file="data/HPT/org_precp.RData")
 sum(is.na(precipitation_df$V3)) 
 precp_missing_value_percentage = sum(is.na(precipitation_df$V3))/nrow(precipitation_df)
 precp_missing_value_percentage # 0 m,v
@@ -67,7 +66,9 @@ nrow(precp_stn) #441154 rows
 # Filter out the records prior to 1990
 precp_stn <- precp_stn %>%
   filter(from >= as.Date("1996-01-01") & to >= as.Date("1996-01-31"))
-nrow(precp_stn) #8206
+head(precp_stn) #8206
+
+save(precp_stn, file="data/HPT/bom_precp_stn_org.RData")
 
 # Merge with SA4 Data
 precp_stn$territory_sa4 <- ASGS::latlon2SA(precp_stn$lat, precp_stn$long, to = "SA4", yr = "2016")
