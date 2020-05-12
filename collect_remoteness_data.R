@@ -69,8 +69,16 @@ glimpse(POP)
 
 
 # Tidy SA1-to-SA4 data
-SA1_4 <- select(SA1_4, SA1_7DIGITCODE_2016, SA4_NAME_2016) 
+SA1_4 <- select(SA1_4, SA1_7DIGITCODE_2016, SA4_NAME_2016) # Reduce the Number of columns
 glimpse(SA1_4)
+
+
+  # Amnd a handful of SA4 exeption names SA1_4 so they'll match SA4 names in the Unemployment data
+amnd_unemploy <- c("Greater Hobart", "New South Wales - Central West", "Victoria - North West", "Western Australia - Outback (North and South)", "Western Australia - Outback (North and South)", "Tasmania - South East", "Tasmania - West and North West")
+amnd_sa4 <- c("Hobart", "Central West", "North West", "Western Australia - Outback (North)", "Western Australia - Outback (South)", "South East", "West and North West")
+for(i in 1:length(amnd_sa4)){    SA1_4$SA4_NAME_2016[SA1_4$SA4_NAME_2016 == amnd_sa4[i]] <- amnd_unemploy[i]   }
+filter(SA1_4, SA4_NAME_2016 == "Greater Hobart"|SA4_NAME_2016 == "New South Wales - Central West"|SA4_NAME_2016 == "Victoria - North West"|SA4_NAME_2016 == "Western Australia - Outback (North and South)"|SA4_NAME_2016 == "Western Australia - Outback (North and South)"|SA4_NAME_2016 == "Tasmania - South East"|SA4_NAME_2016 == "Tasmania - West and North West") %>%
+  distinct(SA4_NAME_2016)
 
 #Tidy Unemployment - (already doen by virtue of Ana's code - no further coding necessary)
 
@@ -168,3 +176,6 @@ glimpse(unemployment_RAPopWtd)
 
 glimpse(unemployment_RAPopWtd)
 distinct(unemployment_RAPopWtd)
+
+save(unemployment_RAPopWtd, file = "data/unemployment_remote.RData")
+     
