@@ -3,6 +3,7 @@ library(lubridate)
 library(Amelia)
 library(corrplot)
 library(dlookr)
+library(here)
 
 # Research Questions
 # What socio-economic, demographic, environmental and geospatial factors should be 
@@ -145,15 +146,18 @@ master_social_good %>%
 # Exploring the relationship 
 # and age
 
-master_social_good %>% 
+irsad_plot <- master_social_good %>% 
   ggplot(aes(IRSAD_Decile, unemployed, colour=IRSAD_Decile))+
   geom_jitter(height = 0)+
   labs(title="IRSAD vs. Unemployed by Census years",
        y="No. Unemployed", 
        x="Index. Relative Socio-Economic Advantage & Disadvantage") +
   facet_wrap(~ master_social_good$census_year)
+  
+  print(irsad_plot)
+  ggsave(here(dir,"irsad_v_umeployed.png"))
 
-master_social_good %>% 
+irsd_plot <- master_social_good %>% 
   ggplot(aes(IRSD_Decile, unemployed, colour=IRSD_Decile))+
   geom_jitter(height = 0)+
   labs(title="IRSD vs. Unemployed by Census years",
@@ -161,7 +165,10 @@ master_social_good %>%
        x="Index. Relative Socio-Economic Disadvantage") +
   facet_wrap(~ master_social_good$census_year)
 
-master_social_good %>% 
+  print(irsd_plot)
+  ggsave(here(dir,"irsd_v_umeployed.png"))
+
+ieo_plot <- master_social_good %>% 
   ggplot(aes(IEO_Decile, unemployed, colour=IEO_Decile))+
   geom_jitter(height = 0)+
   labs(title="IEO vs. Unemployed by Census years",
@@ -169,7 +176,10 @@ master_social_good %>%
        x="Index. Education & Occupation") +
   facet_wrap(~ master_social_good$census_year)
 
-master_social_good %>% 
+  print(ieo_plot)
+  ggsave(here(dir,"ieo_v_umeployed.png"))
+
+ier_plot <- master_social_good %>% 
   ggplot(aes(IER_Decile, unemployed, colour=IER_Decile))+
   geom_jitter(height = 0)+
   labs(title = "IER vs. Unemployed by Census years",
@@ -177,14 +187,19 @@ master_social_good %>%
        x="Index. Economic Resources") +
   facet_wrap(~ master_social_good$census_year)
 
+  print(ier_plot)
+  ggsave(here(dir,"ier_v_umeployed.png"))
+
 #curious about boxplot but not as expressive
-master_social_good %>% 
+ier_box <- master_social_good %>% 
   ggplot(aes(IER_Decile,unemployed))+
   geom_boxplot()+
   labs(title = "IER vs. Unemployed",
        y="No. Unemployed", 
        x="Index. Economic Resources") +
   facet_wrap(~ master_social_good$census_year)
+
+  print(ier_box)
 
 
 
