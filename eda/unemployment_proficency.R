@@ -1,6 +1,5 @@
 library(tidyverse)
 library(lubridate)
-library(corrplot)
 # 
 # Porjct Questions
 # What socio-economic, demographic, environmental and geospatial factors should be included in an unemployment insurance premium model?
@@ -11,180 +10,396 @@ library(corrplot)
 
 
 # Load Data
-load("data/master_data.RData")
+load("data/master_data_tablebuilder.RData")
 dir <- "eda/prof_charts/"
+capitals <- c("Adelaide","Australian","Brisbane","Darwin","Greater","Melbourne","Perth","Sydney")
+seniors <- c("100 years and over","90-99 years","80-89 years","70-79 years")
 
 
-#MAke bins for ages and drop them.
+#cleaning dat for niceness
+master_social_good <- master_social_good %>% 
+  mutate(City = sub(" .*", "", sa4))
 
-unemployment_proficiency <- master_social_good %>% 
-  filter(census_year >= 2006)  %>% 
-  mutate(children =  age_0_4 + age_5_9 + age_10_14) %>% 
-  mutate(young_ad = age_15_19 + age_20_24 + age_25_29) %>% 
-  mutate(work_ad = age_30_34 + age_35_39 + age_40_44 + age_45_49) %>% 
-  mutate (mid_ad = age_50_54 + age_55_59 +age_60_64 + age_65_69) %>% 
-  mutate(old = 1 - children -young_ad - work_ad - mid_ad) %>% 
-  select(-c(age_0_4:age_95_99)) %>% 
-  mutate(unemployment_ratio = (unemployed)/(population)) %>% 
-  select(-c(unemployed,population,Population,IRSAD_Decile,IRSD_Decile,IER_Decile,IEO_Decile ))
-  
-glimpse(unemployment_proficiency)
-summary(unemployment_proficiency)
-
-  
-
-#corrplot (save manually)
-age_cor <- cor(unemployment_proficiency %>% select(c(unemployment_ratio,children:old)))
-corrplot(age_cor)
-
-
-#Not partiuclalry helpful
-lang_cor <- cor(unemployment_proficiency %>% select(c(unemployment_ratio,english_only:language_and_proficiency_not_stated)))
-corrplot(lang_cor,tl.pos = 'n')
-
-vars <- colnames(unemployment_proficiency)[c(3,5:18)]
-#why we don;t use labels
-all_cor <- cor(unemployment_proficiency %>% select(c(unemployment_ratio,vars)))
-corrplot(all_cor,tl.pos = 'n')
+master_social_good$education[master_social_good$education == "hs_finished"] = "Fin. HS"
+master_social_good$education[master_social_good$education == "hs_not_finished"] = "Not Fin. HS"
+master_social_good$capital = master_social_good$City %in% capitals
+master_social_good$capital[master_social_good$capital == T] = "Capital City"
+master_social_good$capital[master_social_good$capital == F] = "Non-Capital City"
+master_social_good$City = NULL
 
 
 
 
 
-#make single variable graphs based on non-averaged data
-for(col in vars){
-  title <- paste(col,"vs Unemployment")
-  g <- ggplot(unemployment_proficiency,aes_string(x = col ,y = 'unemployment_ratio')) + 
-    geom_point() +geom_jitter() +ggtitle(title)
-  print(g)
-  unlink(paste(dir,title,".png",sep = ""))
-  ggsave(paste(dir,title,".png",sep = ""))
-}
-
-year_avg <- unemployment_proficiency %>% 
-  group_by(census_year,territory_sa4) %>% 
-  summarise(unemployment_ratio = mean(unemployment_ratio)) %>% 
-  ungroup()
-
-#WARNING: USing this tables makes te asssumption that year or month does not matter
-clean_avg <- unemployment_proficiency %>% 
-  select(-c(date,unemployment_ratio)) %>% 
-  distinct() %>% 
-  full_join(year_avg)
-
-#make single variable graphs based on averaged data
-for(col in vars){
-  title <- paste("Avg",col,"vs Unemployment")
-  g <- ggplot(clean_avg,aes_string(x = col ,y = 'unemployment_ratio')) + 
-    geom_point() +geom_jitter() +ggtitle(title)
-  print(g)
-  unlink(paste(dir,title,".png",sep = ""))
-  ggsave(paste(dir,title,".png",sep = ""))
-}
-#Stupidly long way to meaure unemplpoyment base on two variables
-md_vars <- vars
-for(col1 in md_vars){
-  for(col2 in md_vars[-1]){
-    
-    if(col1 == col2){
-      next
-    }
-    #print(paste(col1,col2))
-    #We're exluding Queensland - Outback 2016
-    title <- paste(col1,col2,"Avg_Unemployment", sep = "_")
-    g <- ggplot(clean_avg %>% filter(unemployment_ratio < 0.06) ,aes_string(x = col1 ,y = 'unemployment_ratio',colour = col2)) + 
-      geom_point() +geom_jitter() +ggtitle(paste(col1,",\n",col2,"\nand Avg Unemployment", sep = ""))  + 
-      scale_color_gradient(low="light blue", high="blue",name= 'See title')
-    print(g)
-    unlink(paste(dir,title,".png",sep = ""))
-    ggsave(paste(dir,title,".png",sep = ""))
-  }
-  md_vars<- md_vars[-1]
-}
-
-
-#try binning a more strict English - Can speak otehr langauge divide (I'm counting the ones with nothing stated as non-english)
-new_clean_avg <- clean_avg %>% 
-  mutate(not_english = 1- english_only) %>% 
-  select(-c(other_lang_and_english_very_well:language_stated_proficiency_not_stated))
-
-new_vars <- colnames(new_clean_avg %>%  select(-c(territory_sa4,census_year)))
-
-
-#MAke graphs for new variable
-com_var <- c(dplyr::intersect(new_vars,vars))
-
-for(col in com_var){
-  
-  #print(paste(col,'not_english'))
-  
-  title <- paste(col,'not_english',"Avg_Unemployment", sep = "_")
-  g <- ggplot(new_clean_avg %>% filter(unemployment_ratio < 0.06),aes_string(colour = col ,y = 'unemployment_ratio',x = 'not_english')) +
-    geom_point() +geom_jitter() +ggtitle(paste(col,"\nnot_english\nand Avg Unemployment", sep = ""))  +
-    scale_color_gradient(low="light blue", high="blue",name= 'See title')
-  print(g)
-  unlink(paste(dir,title,".png",sep = ""))
-  ggsave(paste(dir,title,".png",sep = ""))
-  
-  
-}
+demographics <- master_social_good %>% 
+  select(-c(IRSAD_Decile:population)) %>% 
+  filter(!(age %in% seniors))
 
 
 
 
-uniques_sa4 <- unemployment_proficiency %>% select(territory_sa4) %>% unique() %>% arrange(territory_sa4)
+summary(demographics)
 
+#age_singluar
 
+age <- demographics %>% 
+  mutate(age = str_replace(age," years.*","")) %>% 
+  group_by(sa4,age,capital) %>% 
+  summarise_at(vars(unemployment,labour_force),sum) %>% 
+  mutate(unemployment_rate = unemployment/labour_force*100)
 
-#Variables to consider: Children, OTHER_LANG_AND_ENGLISH_NOT_WELL,OTHER_LANG_AND_ENGLISH_NOT_ATALL
-#LANGUage_AND_PROFICIENCY_NOT_STATED LANGUage_STATED_PROFICIENCY_NOT_STATED
-
-#some ineration between children and middle/elders?
-#working and young aduls defineity decrease uenployment?
-
-
-#Dividing by SA4 si not helpful, limited data fo each
-i <- 1
-while(i <= nrow(uniques_sa4)) {
-  g <- ggplot(unemployment_proficiency %>% filter(territory_sa4 %in% uniques_sa4[i:(i+8),]),
-              aes(x= children, y = OTHER_LANG_AND_ENGLISH_NOT_WELL,colour = unemployment_ratio)) +
-    geom_point() + scale_color_gradient(low="green", high="red",name= 'Unemployment') +
-    ggtitle("Unemployment rate  by AS4") +
-    facet_wrap(. ~territory_sa4)
-  
-  i = i+8
-  
-  print(g)
-}
-
-#More refiend graphs
-
-cleaner <- clean_avg %>% 
-  select(c(unemployment_ratio,other_lang_and_english_not_atall,
-           language_stated_proficiency_not_stated,young_ad,work_ad,territory_sa4,census_year)) %>% 
-  inner_join(new_clean_avg %>% select(c(territory_sa4,not_english,census_year))) %>% 
-  distinct() %>% 
-  select(-c(census_year,territory_sa4)) %>% 
-  mutate(other_lang_and_english_not_atall = other_lang_and_english_not_atall*100) %>% 
-  mutate(young_ad = young_ad*100) %>% 
-  mutate(not_english = not_english*100)
-
-
-g <- ggplot(cleaner %>% filter(unemployment_ratio < 0.06) ,aes(x = other_lang_and_english_not_atall ,y = unemployment_ratio,colour = young_ad)) + 
-  geom_point() +geom_jitter() +  xlab("% of pop who can't speak English") + ylab("Unemployment ratio") +
-  scale_color_gradient(low="light blue", high="blue",name= 'Young Adults\npercentage')
+title = 'Unemployment Rate by Age Band'
+g <- ggplot(age,aes(x = labour_force,y = unemployment_rate,colour = age)) + 
+  geom_point() +geom_jitter(height = 0)+
+  scale_color_discrete(name= 'Age Band')+
+  labs(title= title,
+       y="Unemployment Rate(%)", 
+       x="No. in Labour Force") 
 print(g)
-unlink(paste(dir,"good1.png",sep = ""))
-ggsave(paste(dir,"good1.png",sep = ""))
+unlink(paste(dir,title,"_scatter.png",sep = ""))
+ggsave(paste(dir,title,"_scatter.png",sep = ""))
 
 
-
-g <- ggplot(cleaner %>% filter(unemployment_ratio < 0.06) ,aes(x =not_english,y = unemployment_ratio,colour = other_lang_and_english_not_atall)) + 
-  geom_point() +geom_jitter() +  xlab("% of pop who don't speak english purely") + ylab("Unemployment ratio") +
-  scale_color_gradient(low="light blue", high="blue",name= 'Poor English\npercentage')
+g <- ggplot(age,aes(x = age,y = unemployment_rate)) + 
+  geom_boxplot() +
+  labs(title=title,
+       y="Unemployment Rate(%)", 
+       x="Age Band") 
 print(g)
-unlink(paste(dir,"good2.png",sep = ""))
-ggsave(paste(dir,"good2.png",sep = ""))
+unlink(paste(dir,title,"_box.png",sep = ""))
+ggsave(paste(dir,title,"_box.png",sep = ""))
+
+#gender
+
+gender <- demographics %>% 
+  mutate(age = str_replace(age," years.*","")) %>% 
+  group_by(sa4,sex,capital) %>% 
+  summarise_at(vars(unemployment,labour_force),sum) %>% 
+  mutate(unemployment_rate = unemployment/labour_force*100) %>% 
+  mutate(labour_force = labour_force/1000)
+
+title = 'Unemployment Rate by Gender'
+g <- ggplot(gender,aes(x = labour_force,y = unemployment_rate,colour = sex)) + 
+  geom_point() +geom_jitter(height = 0)+ facet_grid(~capital)+
+  scale_color_discrete(name= 'Sex')+
+  labs(title= title,
+       y="Unemployment Rate(%)", 
+       x="No. in Labour Force 000s") 
+print(g)
+unlink(paste(dir,title,"_scatter.png",sep = ""))
+ggsave(paste(dir,title,"_scatter.png",sep = ""))
+
+
+
+#All logical but capital
+
+title = "Unemployment"
+logi <- demographics %>% 
+  group_by(sa4,sex,education,ingp) %>% 
+  summarise_at(vars(unemployment,labour_force),sum) %>% 
+  mutate(unemployment_rate = unemployment/labour_force*100)
+
+g <- ggplot(logi,aes(x = sex,y = unemployment_rate)) + 
+  geom_boxplot() + facet_grid(education~ingp) +
+  labs(title=paste(title),
+       y="Unemployment Rate(%)", 
+       x="Gender") 
+print(g)
+unlink(paste(dir,title,"_box.png",sep = ""))
+ggsave(paste(dir,title,"_box.png",sep = ""))
+
+#All logical by capital
+
+title = "Unemployment by Capital City"
+logi_cap <- demographics %>% 
+  group_by(sa4,capital,education) %>% 
+  summarise_at(vars(unemployment,labour_force),sum) %>% 
+  mutate(unemployment_rate = unemployment/labour_force*100) %>% 
+  mutate(labour_force = labour_force/1000)
+
+g <- ggplot(logi_cap,aes(x = labour_force,y = unemployment_rate)) + 
+  geom_point() + facet_grid(education~capital) +
+  labs(title=paste(title),
+       y="Unemployment Rate(%)", 
+       x="No. in Labour Force 000s") 
+print(g)
+unlink(paste(dir,title,".png",sep = ""))
+ggsave(paste(dir,title,".png",sep = ""))
+
+
+#aindigenous
+ind <- demographics %>% 
+  mutate(age = str_replace(age," years.*","")) %>% 
+  group_by(sa4,age,ingp,capital,sex,remoteness_index) %>% 
+  summarise_at(vars(unemployment,labour_force),sum) %>% 
+  mutate(unemployment_rate = unemployment/labour_force*100)
+
+#ignoreing wired 100yrs old lookign for work
+title = 'Indigenous Unemployment by Capital city'
+g <- ggplot(ind %>% filter(age != "100" &ingp == "Indigenous"),
+            aes(x = labour_force,y = unemployment_rate,colour = age)) + 
+  geom_point() +geom_jitter(height = 0)+facet_grid(sex~capital) +
+  scale_color_discrete(name= 'Age')+
+  labs(title= title,
+       y="Unemployment Rate(%)", 
+       x="No. in Labour Force") 
+print(g)
+unlink(paste(dir,title,"_scatter.png",sep = ""))
+ggsave(paste(dir,title,"_scatter.png",sep = ""))
+
+title = 'Indigenous Unemployment by Labour force'
+g <- ggplot(ind %>% filter(age != "100"  & unemployment_rate < 100),
+            aes(x = labour_force,y = unemployment_rate,colour = ingp)) + 
+  geom_point() +geom_jitter(height = 0) +
+  scale_color_discrete(name= 'Age')+
+  labs(title= title,
+       y="Unemployment Rate(%)", 
+       x="No. in Labour Force") 
+print(g)
+unlink(paste(dir,title,"_scatter.png",sep = ""))
+ggsave(paste(dir,title,"_scatter.png",sep = ""))
+
+title = 'Non-Indigenous Unemployment by Capital city'
+g <- ggplot(ind %>% filter(ingp != "Indigenous") %>% 
+              mutate(labour_force = labour_force/1000),
+            aes(x = labour_force,y = unemployment_rate,colour = age)) + 
+  geom_point() +geom_jitter(height = 0)+facet_grid(sex~capital) +
+  scale_color_discrete(name= 'Age')+
+  labs(title= title,
+       y="Unemployment Rate(%)", 
+       x="No. in Labour Force 000s") 
+print(g)
+unlink(paste(dir,title,"_scatter.png",sep = ""))
+ggsave(paste(dir,title,"_scatter.png",sep = ""))
+
+
+#education
+edu <- master_social_good %>% 
+  filter(!(age %in% seniors)) %>% 
+  mutate(age = str_replace(age," years.*","")) %>% 
+  group_by(sa4,age,education,sex,IRSAD_Decile) %>% 
+  summarise_at(vars(unemployment,labour_force),sum) %>% 
+  mutate(unemployment_rate = unemployment/labour_force*100)
+
+
+title = 'Unemployment by IRSAD'
+g <- ggplot(edu , 
+            aes(x = IRSAD_Decile,y = unemployment_rate,colour = age)) + 
+  geom_point() +geom_jitter(height = 0)+facet_grid(sex~education) +
+  scale_color_discrete(name= 'Age')+
+  labs(title= title,
+       y="Unemployment Rate(%)", 
+       x="Index. Relative Socio-Economic Ad. & Disad. Decile") 
+print(g)
+unlink(paste(dir,title,"_scatter.png",sep = ""))
+ggsave(paste(dir,title,"_scatter.png",sep = ""))
+
+
+#education by indegnous
+index_ind <- master_social_good %>% 
+  filter(!(age %in% seniors)) %>% 
+  group_by(sa4,ingp,education,sex,IRSAD_Decile) %>% 
+  summarise_at(vars(unemployment,labour_force),sum) %>% 
+  mutate(unemployment_rate = unemployment/labour_force*100)
+
+
+title = 'Indigenous Unemployment by IRSAD'
+g <- ggplot(index_ind %>% filter(unemployment_rate <= 100),
+            aes(x = IRSAD_Decile,y = unemployment_rate,colour = sex)) + 
+  geom_point() +geom_jitter(height = 0)+facet_grid(ingp~education) +
+  scale_color_discrete(name= 'Gender')+
+  labs(title= title,
+       y="Unemployment Rate(%)", 
+       x="IRSAD Deciles") 
+print(g)
+unlink(paste(dir,title,".png",sep = ""))
+ggsave(paste(dir,title,".png",sep = ""))
+
+
+
+###Seniors unemployment! (or why you should alwasy keep population in mind)####
+
+senior_demo <- master_social_good %>% 
+  select(-c(IRSAD_Decile:population)) %>% 
+  filter((age %in% seniors)) %>% 
+  filter(labour_force > 0)
+
+
+
+#age_singluar
+
+age <- senior_demo %>% 
+  mutate(age = str_replace(age," years.*","")) %>% 
+  group_by(sa4,age,capital) %>% 
+  summarise_at(vars(unemployment,labour_force),sum) %>% 
+  mutate(unemployment_rate = unemployment/labour_force*100)
+
+title = 'Senior Unemployment Rate by Age Band'
+g <- ggplot(age,aes(x = labour_force,y = unemployment_rate,colour = age)) + 
+  geom_point() +geom_jitter(height = 0)+
+  scale_color_discrete(name= 'Age Band')+
+  labs(title= title,
+       y="Unemployment Rate(%)", 
+       x="No. in Labour Force") 
+print(g)
+unlink(paste(dir,title,"_scatter.png",sep = ""))
+ggsave(paste(dir,title,"_scatter.png",sep = ""))
+
+
+g <- ggplot(age,aes(x = age,y = unemployment_rate)) + 
+  geom_boxplot() +
+  labs(title=title,
+       y="Unemployment Rate(%)", 
+       x="Age Band") 
+print(g)
+unlink(paste(dir,title,"_box.png",sep = ""))
+ggsave(paste(dir,title,"_box.png",sep = ""))
+
+#gender
+
+gender <- senior_demo %>% 
+  mutate(age = str_replace(age," years.*","")) %>% 
+  group_by(sa4,sex,capital) %>% 
+  summarise_at(vars(unemployment,labour_force),sum) %>% 
+  mutate(unemployment_rate = unemployment/labour_force*100) 
+
+title = 'Senior Unemployment Rate by Gender'
+g <- ggplot(gender,aes(x = labour_force,y = unemployment_rate,colour = sex)) + 
+  geom_point() +geom_jitter(height = 0)+ facet_grid(~capital)+
+  scale_color_discrete(name= 'Sex')+
+  labs(title= title,
+       y="Unemployment Rate(%)", 
+       x="No. in Labour Force") 
+print(g)
+unlink(paste(dir,title,"_scatter.png",sep = ""))
+ggsave(paste(dir,title,"_scatter.png",sep = ""))
+
+
+
+#All logical but capital
+
+title = "Senior Unemployment"
+logi <- senior_demo %>% 
+  group_by(sa4,sex,education,ingp) %>% 
+  summarise_at(vars(unemployment,labour_force),sum) %>% 
+  mutate(unemployment_rate = unemployment/labour_force*100)
+
+g <- ggplot(logi,aes(x = sex,y = unemployment_rate)) + 
+  geom_boxplot() + facet_grid(education~ingp) +
+  labs(title=paste(title),
+       y="Unemployment Rate(%)", 
+       x="Gender") 
+print(g)
+unlink(paste(dir,title,"_box.png",sep = ""))
+ggsave(paste(dir,title,"_box.png",sep = ""))
+
+#All logical by capital
+
+title = "Senior Unemployment by Capital City"
+logi_cap <- senior_demo %>% 
+  group_by(sa4,capital,education) %>% 
+  summarise_at(vars(unemployment,labour_force),sum) %>% 
+  mutate(unemployment_rate = unemployment/labour_force*100) 
+
+g <- ggplot(logi_cap,aes(x = labour_force,y = unemployment_rate)) + 
+  geom_point() + facet_grid(education~capital) +
+  labs(title=paste(title),
+       y="Unemployment Rate(%)", 
+       x="No. in Labour Force") 
+print(g)
+unlink(paste(dir,title,".png",sep = ""))
+ggsave(paste(dir,title,".png",sep = ""))
+
+
+#aindigenous
+ind <- senior_demo %>% 
+  mutate(age = str_replace(age," years.*","")) %>% 
+  group_by(sa4,age,ingp,capital,sex,remoteness_index) %>% 
+  summarise_at(vars(unemployment,labour_force),sum) %>% 
+  mutate(unemployment_rate = unemployment/labour_force*100) 
+
+#ignoreing wired 100yrs old lookign for work
+title = 'Senior Indigenous Unemployment by Capital city'
+g <- ggplot(ind %>% filter(age != "100" &ingp == "Indigenous"),
+            aes(x = labour_force,y = unemployment_rate,colour = age)) + 
+  geom_point() +geom_jitter(height = 0)+facet_grid(sex~capital) +
+  scale_color_discrete(name= 'Age')+
+  labs(title= title,
+       y="Unemployment Rate(%)", 
+       x="No. in Labour Force") 
+print(g)
+unlink(paste(dir,title,"_scatter.png",sep = ""))
+ggsave(paste(dir,title,"_scatter.png",sep = ""))
+
+title = 'Senior Indigenous Unemployment by Labour force'
+g <- ggplot(ind ,
+            aes(x = labour_force,y = unemployment_rate,colour = ingp)) + 
+  geom_point() +geom_jitter(height = 0) +
+  scale_color_discrete(name= 'Age')+
+  labs(title= title,
+       y="Unemployment Rate(%)", 
+       x="No. in Labour Force") 
+print(g)
+unlink(paste(dir,title,"_scatter.png",sep = ""))
+ggsave(paste(dir,title,"_scatter.png",sep = ""))
+
+title = 'Senior Non-Indigenous Unemployment by Capital city'
+g <- ggplot(ind %>% filter(ingp != "Indigenous") %>% 
+              mutate(labour_force = labour_force/1000),
+            aes(x = labour_force,y = unemployment_rate,colour = age)) + 
+  geom_point() +geom_jitter(height = 0)+facet_grid(sex~capital) +
+  scale_color_discrete(name= 'Age')+
+  labs(title= title,
+       y="Unemployment Rate(%)", 
+       x="No. in Labour Force") 
+print(g)
+unlink(paste(dir,title,"_scatter.png",sep = ""))
+ggsave(paste(dir,title,"_scatter.png",sep = ""))
+
+
+#education
+edu <- master_social_good %>% 
+  filter(age %in% seniors) %>% 
+  mutate(age = str_replace(age," years.*","")) %>% 
+  group_by(sa4,age,education,sex,IRSAD_Decile) %>% 
+  summarise_at(vars(unemployment,labour_force),sum) %>% 
+  mutate(unemployment_rate = unemployment/labour_force*100) 
+  
+
+title = 'Senior Unemployment by IRSAD'
+g <- ggplot(edu, 
+            aes(x = IRSAD_Decile,y = unemployment_rate,colour = age)) + 
+  geom_point() +geom_jitter(height = 0)+facet_grid(sex~education) +
+  scale_color_discrete(name= 'Age')+
+  labs(title= title,
+       y="Unemployment Rate(%)", 
+       x="IRSAD Deciles") 
+print(g)
+unlink(paste(dir,title,"_scatter.png",sep = ""))
+ggsave(paste(dir,title,"_scatter.png",sep = ""))
+
+
+#education by indegnous
+index_ind <- master_social_good %>%
+  filter(age %in% seniors) %>% 
+  group_by(sa4,ingp,education,sex,IRSAD_Decile) %>% 
+  summarise_at(vars(unemployment,labour_force),sum) %>% 
+  mutate(unemployment_rate = unemployment/labour_force*100)
+
+
+title = 'Senior Indigenous Unemployment by IRSAD'
+g <- ggplot(index_ind %>% filter(unemployment_rate <= 100),
+            aes(x = IRSAD_Decile,y = unemployment_rate,colour = sex)) + 
+  geom_point() +geom_jitter(height = 0)+facet_grid(ingp~education) +
+  scale_color_discrete(name= 'Gender')+
+  labs(title= title,
+       y="Unemployment Rate(%)", 
+       x="IRSAD Deciles") 
+print(g)
+unlink(paste(dir,title,".png",sep = ""))
+ggsave(paste(dir,title,".png",sep = ""))
+
+
 
 
 
