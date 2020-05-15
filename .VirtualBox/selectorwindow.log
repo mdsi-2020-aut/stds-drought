@@ -1,0 +1,15 @@
+00:00:00.988891 VirtualBox GUI VM Selector Window 6.0.12 r133076 win.amd64 (Sep  3 2019 10:36:06) release log
+00:00:00.988894 Log opened 2019-09-10T00:50:35.904016500Z
+00:00:00.988894 Build Type: release
+00:00:00.988898 OS Product: Windows 10
+00:00:00.988899 OS Release: 10.0.18362
+00:00:00.988900 OS Service Pack: 
+00:00:01.014702 DMI Product Name: HP ENVY Notebook
+00:00:01.020301 DMI Product Version: Type1ProductConfigId
+00:00:01.020316 Host RAM: 8047MB (7.8GB) total, 2877MB (2.8GB) available
+00:00:01.020327 Executable: C:\Program Files\Oracle\VirtualBox\VirtualBox.exe
+00:00:01.020328 Process ID: 6116
+00:00:01.020328 Package type: WINDOWS_64BITS_GENERIC
+00:00:01.020498 Qt version: 5.6.2
+00:00:01.094002 GUI: UIMediumEnumerator: Medium-enumeration started...
+00:00:02.705590 GUI: UIMediumEnumerator: Medium-enumeration finished!
