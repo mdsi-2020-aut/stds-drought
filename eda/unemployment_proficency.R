@@ -203,7 +203,7 @@ index_ind <- master_social_good %>%
   mutate(unemployment_rate = unemployment/labour_force*100)
 
 
-title = 'Indigenous Unemployment by ISRAD'
+title = 'Indigenous Unemployment by IRSAD'
 g <- ggplot(index_ind %>% filter(unemployment_rate <= 100),
             aes(x = IRSAD_Decile,y = unemployment_rate,colour = sex)) + 
   geom_point() +geom_jitter(height = 0)+facet_grid(ingp~education) +
@@ -387,7 +387,7 @@ index_ind <- master_social_good %>%
   mutate(unemployment_rate = unemployment/labour_force*100)
 
 
-title = 'Senior Indigenous Unemployment by ISRAD'
+title = 'Senior Indigenous Unemployment by IRSAD'
 g <- ggplot(index_ind %>% filter(unemployment_rate <= 100),
             aes(x = IRSAD_Decile,y = unemployment_rate,colour = sex)) + 
   geom_point() +geom_jitter(height = 0)+facet_grid(ingp~education) +
