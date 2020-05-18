@@ -2,7 +2,7 @@ library(tidyverse)
 library(raustats)
 library(lubridate)
 
-load("data/master_data.RData")
+load("data/master_data_tablebuilder.RData")
 load("data/unemployment.RData")
 seifa_dir <- "eda/SEIFA_charts/"
 prof_dir <- "eda/prof_charts/"

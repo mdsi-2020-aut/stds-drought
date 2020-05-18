@@ -93,14 +93,30 @@ ggsave(paste(dir,title,"_scatter.png",sep = ""))
 
 #All logical but capital
 
-title = "Unemployment"
+title = "Indigenous Unemployment"
 logi <- demographics %>% 
   group_by(sa4,sex,education,ingp) %>% 
   summarise_at(vars(unemployment,labour_force),sum) %>% 
   mutate(unemployment_rate = unemployment/labour_force*100)
 
-g <- ggplot(logi,aes(x = sex,y = unemployment_rate)) + 
-  geom_boxplot() + facet_grid(education~ingp) +
+g <- ggplot(logi %>% filter(ingp == "Indigenous"),aes(x = sex,y = unemployment_rate)) + 
+  geom_boxplot() + facet_grid(~education) +
+  labs(title=paste(title),
+       y="Unemployment Rate(%)", 
+       x="Gender") 
+print(g)
+unlink(paste(dir,title,"_box.png",sep = ""))
+ggsave(paste(dir,title,"_box.png",sep = ""))
+
+
+title = "Non-Indigenous Unemployment"
+logi <- demographics %>% 
+  group_by(sa4,sex,education,ingp) %>% 
+  summarise_at(vars(unemployment,labour_force),sum) %>% 
+  mutate(unemployment_rate = unemployment/labour_force*100)
+
+g <- ggplot(logi %>% filter(ingp != "Indigenous"),aes(x = sex,y = unemployment_rate)) + 
+  geom_boxplot() + facet_grid(~education) +
   labs(title=paste(title),
        y="Unemployment Rate(%)", 
        x="Gender") 
