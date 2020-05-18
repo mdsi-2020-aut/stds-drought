@@ -1,0 +1,54 @@
+00:00:00.001193 main     VirtualBox COM Server 6.0.12 r133076 win.amd64 (Sep  3 2019 10:36:06) release log
+00:00:00.001198 main     Log opened 2019-09-10T00:50:35.185590300Z
+00:00:00.001199 main     Build Type: release
+00:00:00.001206 main     OS Product: Windows 10
+00:00:00.001208 main     OS Release: 10.0.18362
+00:00:00.001209 main     OS Service Pack: 
+00:00:00.124865 main     DMI Product Name: HP ENVY Notebook
+00:00:00.155499 main     DMI Product Version: Type1ProductConfigId
+00:00:00.155517 main     Host RAM: 8047MB (7.8GB) total, 2890MB (2.8GB) available
+00:00:00.155530 main     Executable: C:\Program Files\Oracle\VirtualBox\VBoxSVC.exe
+00:00:00.155531 main     Process ID: 16440
+00:00:00.155532 main     Package type: WINDOWS_64BITS_GENERIC
+00:00:00.275068          VirtualBox: object creation starts
+00:00:00.275425          Home directory: 'C:\Users\NeilCunningham\.VirtualBox'
+00:00:00.275556          Installed Drivers:
+00:00:00.278255            C:\WINDOWS\system32\DRIVERS\VBoxNetLwf.sys (Version: 6.0.12.33076)
+00:00:00.279192            C:\WINDOWS\system32\DRIVERS\VBoxUSBMon.sys (Version: 6.0.12.33076)
+00:00:00.279974            C:\WINDOWS\system32\DRIVERS\VBoxDrv.sys (Version: 6.0.12.33076)
+00:00:00.281609            C:\WINDOWS\system32\DRIVERS\VBoxNetAdp6.sys (Version: 6.0.12.33076)
+00:00:00.291777          Loading settings file "C:\Users\NeilCunningham\.VirtualBox\VirtualBox.xml" with version "1.12-windows"
+00:00:00.294612          Getting USB descriptor (id 0) failed with error 31
+00:00:00.294706          Getting USB descriptor (id 0) failed with error 31
+00:00:00.294836          Getting USB descriptor (id 0) failed with error 31
+00:00:00.297235          USB: Unknown USB device detected (idVendor: 0x05c8, idProduct: 0x0389)
+00:00:00.297323          USB: Unknown USB device detected (idVendor: 0x8087, idProduct: 0x0a2a)
+00:00:00.433887          netIfIsWireless: CreateFile on '\\.\{4604396D-3C72-4810-B3C9-CF93ECA33125}' failed with rcWin=2 (0x2) - ignoring
+00:00:00.437977          netIfIsWireless: CreateFile on '\\.\{096B9C1D-5B19-4C10-BF89-5D32D6C4299B}' failed with rcWin=2 (0x2) - ignoring
+00:00:00.464850          HostDnsMonitor::updateInfo
+00:00:00.466141          HostDnsMonitor: old information
+00:00:00.466153            no server entries
+00:00:00.466155            no domain set
+00:00:00.466156            no search string entries
+00:00:00.466156          HostDnsMonitor: new information
+00:00:00.466157            server 1: 198.142.152.164
+00:00:00.466158            server 2: 198.142.152.165
+00:00:00.466158            domain: optusnet.com.au
+00:00:00.466159            no search string entries
+00:00:00.600822          SUPR0QueryVTCaps -> VERR_VMX_MSR_ALL_VMX_DISABLED
+00:00:00.605496          VD: VDInit finished with VINF_SUCCESS
+00:00:00.622662          Loading settings file "C:\Users\NeilCunningham\VirtualBox VMs\UNSW\UNSW.vbox" with version "1.15-windows"
+00:00:00.630533          VirtualBox: object created
+00:00:03.719407          Saving settings file "C:\Users\NeilCunningham\.VirtualBox\VirtualBox.xml" with version "1.12-windows"
+00:00:03.741825          Saving settings file "C:\Users\NeilCunningham\.VirtualBox\VirtualBox.xml" with version "1.12-windows"
+00:00:08.850874          ERROR [COM]: aRC=VBOX_E_OBJECT_NOT_FOUND (0x80bb0001) aIID={70401eef-c8e9-466b-9660-45cb3e9979e4} aComponent={ExtPackManagerWrap} aText={No extension pack by the name 'Oracle VM VirtualBox Extension Pack' was found}, preserve=false aResultDetail=0
+00:00:09.270285          ERROR [COM]: aRC=VBOX_E_IPRT_ERROR (0x80bb0005) aIID={5047460a-265d-4538-b23e-ddba5fb84976} aComponent={SessionMachine} aText={Saved screenshot data is not available (VERR_NOT_SUPPORTED)}, preserve=false aResultDetail=-37
+00:00:09.759796          netIfIsWireless: CreateFile on '\\.\{4604396D-3C72-4810-B3C9-CF93ECA33125}' failed with rcWin=2 (0x2) - ignoring
+00:00:09.762703          netIfIsWireless: CreateFile on '\\.\{096B9C1D-5B19-4C10-BF89-5D32D6C4299B}' failed with rcWin=2 (0x2) - ignoring
+00:33:59.107283          Saving settings file "C:\Users\NeilCunningham\.VirtualBox\VirtualBox.xml" with version "1.12-windows"
+00:33:59.123144          Saving settings file "C:\Users\NeilCunningham\.VirtualBox\VirtualBox.xml" with version "1.12-windows"
+00:34:09.763044          Saving settings file "C:\Users\NeilCunningham\VirtualBox VMs\UNSW\UNSW.vbox" with version "1.15-windows"
+00:34:16.223946 main     VirtualBox: object deletion starts
+00:34:16.228618 main     ERROR [COM]: aRC=VBOX_E_OBJECT_IN_USE (0x80bb000c) aIID={ad47ad09-787b-44ab-b343-a082a3f2dfb1} aComponent={MediumWrap} aText={Medium 'C:\Users\NeilCunningham\VirtualBox VMs\UNSW\UNSW.vdi' cannot be closed because it is still attached to 1 virtual machines}, preserve=false aResultDetail=0
+00:34:16.249031 Watcher  ERROR [COM]: aRC=E_ACCESSDENIED (0x80070005) aIID={d0a0163f-e254-4e5b-a1f2-011cf991c38d} aComponent={VirtualBoxWrap} aText={The object is not ready}, preserve=false aResultDetail=0
+00:34:16.250090 main     VirtualBox: object deleted
