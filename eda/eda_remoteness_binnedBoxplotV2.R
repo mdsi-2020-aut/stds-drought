@@ -1,0 +1,357 @@
+#################################################################################
+# SCRIPT OVERVIEW
+# Exploratory data analysis (incl. data quality review of remoteness data)
+#################################################################################
+
+library(tidyverse)
+library(raustats)
+library(ggplot2)
+#library(hrbrthemes)
+
+load("data/master_data.RData")
+master <- master_social_good
+glimpse(master)
+summary(master)
+
+u_r <- master %>%
+  select(date, unemployed, population, territory_sa4, remoteness_index) %>%
+  mutate(unemploy_rate = unemployed / population)
+glimpse(u_r)
+
+summary(u_r)
+#date              unemployed      population     territory_sa4      remoteness_index
+#Min.   :2006-01-01   Min.   :  570   Min.   : 27801   Length:15390       Min.   :1.000   
+#1st Qu.:2009-07-01   1st Qu.: 3989   1st Qu.:127171   Class :character   1st Qu.:1.008   
+#Median :2013-02-01   Median : 6060   Median :182056   Mode  :character   Median :1.161   
+#Mean   :2013-01-30   Mean   : 7280   Mean   :210216                      Mean   :1.785   
+#3rd Qu.:2016-09-01   3rd Qu.: 9319   3rd Qu.:262458                      3rd Qu.:2.318   
+#Max.   :2020-03-01   Max.   :37202   Max.   :699356                      Max.   :4.548   
+#unemploy_rate    
+#Min.   :0.01017  
+#1st Qu.:0.02726  
+#Median :0.03365  
+#Mean   :0.03413  
+#3rd Qu.:0.04008  
+#Max.   :0.10060 
+
+scatter <- ggplot(data = u_r) + 
+  geom_point(mapping = aes(x = remoteness_index, y = unemploy_rate))
+print(scatter + labs(caption = "Suggests no linear relationship or one obscured by larger variation in unemployment over time", y = "Unemployment Rate", x = "Remoteness Rank"))
+ggsave("RemoteEDA 1 Unemp+Remote Scatter All.pdf")
+
+# Unemployment by remoteness area at peak (Aug 2007 12.7%) and trough (2020 4.6%)
+# of unemployment (by colour)
+u_r_200708_202001 <- u_r %>%
+  filter(date == "2007-08-01" | date == "2020-01-01")
+glimpse(u_r_200708_202001)
+scatter <- ggplot(data = u_r_200708_202001) + 
+  geom_point(mapping = aes(x = remoteness_index, y = unemploy_rate, colour = date))
+print(scatter + ggtitle("Aug 2007 (12.1%)  and Jan 2020 (4.6%)") + labs(caption = "Superficial glance suggests no linear relationship", y = "Unemployment Rate", x = "Remoteness Rank"))
+ggsave("RemoteEDA 4 Unemp+Remote Scatter 2007008+20200101 Colour.pdf")
+ggsave("RemoteEDA 4 Unemp+Remote Scatter 2007008+20200101 Colour.png")
+
+# Unemployment by remoteness area at peak (Aug 2007 12.7%) and trough (2020 4.6%)
+# of unemployment (by facet)
+scatter_peakTorugh <- ggplot(data = u_r_200708_202001) + 
+  geom_point(mapping = aes(x = remoteness_index, y = unemploy_rate)) + 
+  facet_wrap(~date, nrow = 1)
+print(scatter_peakTrough + ggtitle("Aug 2007 (12.1%)  and Jan 2020 (4.6%)") + labs(caption = "Superficial glance suggests no linear relationship", y = "Unemployment Rate", x = "Remoteness Rank"))
+ggsave("RemoteEDA 5 Unemp+Remote Scatter 2007008+20200101 Facet.pdf")
+
+# Group into bins and chart the resulting boxplots
+u_r_bins <- u_r %>%
+  mutate( bin=cut_width(remoteness_index, width=1.0, boundary=0.5))
+glimpse(u_r_bins)
+
+box_r_bins <- ggplot(u_r_bins, aes(x=bin, y=unemploy_rate)) + 
+  geom_boxplot()
+print(box_r_bins)
+ggsave("RemoteEDA 11 Unemp+Remote Boxplot.pdf")
+ggsave("RemoteEDA 11 Unemp+Remote Boxplot.png")
+
+bin1_sa4_count <- u_r_bins %>%
+  filter(bin == "[0.5,1.5]") %>%
+  distinct(territory_sa4)
+print(bin1_sa4_count) 
+# 49
+
+bin2_sa4_count <- u_r_bins %>%
+  filter(bin == "(1.5,2.5]") %>%
+  distinct(territory_sa4)
+print(bin2_sa4_count) 
+# 22
+
+bin3_sa4_count <- u_r_bins %>%
+  filter(bin == "(2.5,3.5]") %>%
+  distinct(territory_sa4)
+print(bin3_sa4_count) 
+# 12
+
+bin4_sa4_count <- u_r_bins %>%
+  filter(bin == "(3.5,4.5]") %>%
+  distinct(territory_sa4)
+print(bin4_sa4_count) 
+# 2
+
+bin5_sa4_count <- u_r_bins %>%
+  filter(bin == "(4.5,5.5]") %>%
+  distinct(territory_sa4)
+print(bin5_sa4_count) 
+# 2
+
+# simple boxplot for Unemployment on it's own
+ggplot(data = u_r, mapping = aes(y = unemploy_rate)) + 
+  geom_boxplot()
+ggsave("RemoteEDA 3 Unemp+Remote Boxplot.pdf")
+
+summary(u_r$unemploy_rate)
+#Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#0.01017 0.02726 0.03365 0.03413 0.04008 0.10060
+
+u_r_outliers <- u_r %>%
+  filter(unemploy_rate > 1.5 * 0.03413)
+glimpse(u_r_outliers)
+#Observations: 620
+
+n_distinct(u_r_outliers$territory_sa4)
+#[1] 28
+u_r_outliers_sa4 <- u_r_outliers %>%
+  group_by(territory_sa4) %>%
+  summarise(mean(unemploy_rate), mean(remoteness_index))
+u_r_outliers_sa4
+print(u_r_outliers_sa4, n = "inf")
+# A tibble: 28 x 3
+#territory_sa4                                 `mean(unemploy_rate)` `mean(remoteness_index)`
+#<chr>                                                         <dbl>                    <dbl>
+#  1 Adelaide - North                                             0.0529                     1.02
+#2 Ballarat                                                     0.0552                     2.00
+#3 Cairns                                                       0.0565                     3.02
+#4 Central Queensland                                           0.0524                     2.30
+#5 Coffs Harbour - Grafton                                      0.0527                     2.18
+#6 Hunter Valley exc Newcastle                                  0.0584                     1.63
+#7 Ipswich                                                      0.0553                     1.18
+#8 Logan - Beaudesert                                           0.0524                     1.10
+#9 Mackay - Isaac - Whitsunday                                  0.0540                     2.61
+#10 Mandurah                                                     0.0578                     1.04
+#11 Melbourne - North West                                       0.0515                     1.08
+#12 Melbourne - West                                             0.0545                     1.01
+#13 Mid North Coast                                              0.0544                     2.18
+#14 Moreton Bay - North                                          0.0546                     1.15
+#15 Murray                                                       0.0564                     2.23
+#16 New England and North West                                   0.0520                     2.59
+#17 Northern Territory - Outback                                 0.0549                     4.51
+#18 Perth - North East                                           0.0516                     1.05
+#19 Queensland - Outback                                         0.0758                     4.55
+#20 Southern Highlands and Shoalhaven                            0.0523                     2.00
+#21 Sydney - Blacktown                                           0.0550                     1   
+#22 Sydney - Outer South West                                    0.0538                     1.14
+#23 Sydney - South West                                          0.0551                     1.00
+#24 Tasmania - South East                                        0.0554                     2.98
+#25 Tasmania - West and North West                               0.0523                     2.82
+#26 Townsville                                                   0.0574                     3.04
+#27 Western Australia - Outback (North and South)                0.0531                     4.01
+#28 Wide Bay                                                     0.0536                     2.10
+
+#########################################################################
+#Problem solving to try to resolve joining problems and getting to territory rollup
+
+sa1_4 <- read_csv("data/SA1_2016_AUST.csv")
+glimpse(sa1_4) #Observations: 57,523
+glimpse(u_r) #Observations: 15,390
+
+#This left_join didn't work - 9 million rows?
+sa1_4 <- read_csv("data/SA1_2016_AUST.csv")
+u_r_r <- left_join(u_r, sa1_4, by = c("territory_sa4" = "SA4_NAME_2016"))
+glimpse(u_r_r) # Observations: 9,368,406  ###9 million rows?###
+
+#This inner_join didn't fix it
+sa1_4 <- read_csv("data/SA1_2016_AUST.csv")
+u_r_r <- inner_join(u_r, sa1_4, by = c("territory_sa4" = "SA4_NAME_2016"))
+glimpse(u_r_r) # Observations: 9,366,867  ###9 million rows?###
+
+#This semi_join didn't fix it
+sa1_4 <- read_csv("data/SA1_2016_AUST.csv")
+u_r_r <- semi_join(u_r, sa1_4, by = c("territory_sa4" = "SA4_NAME_2016"))
+glimpse(u_r_r) # Observations: 13,851  ###13,851 rows?###
+
+# Neither of these 3 X attempts to group the orginal data acted to reduce the rows in the original file 
+sa1_4 <- read_csv("data/SA1_2016_AUST.csv")
+sa1_4_group <- sa1_4 %>%
+  select(SA4_NAME_2016, GCCSA_NAME_2016, STATE_NAME_2016)%>%
+  group_by(SA4_NAME_2016)
+glimpse(sa1_4_group)
+# Observations: 57,523
+
+sa1_4 <- read_csv("data/SA1_2016_AUST.csv")
+sa1_4 <- sa1_4 %>%
+  select(SA4_NAME_2016, GCCSA_NAME_2016, STATE_NAME_2016) %>%
+  group_by("SA4_NAME_2016")
+# Observations: 57,523
+
+sa1_4 <- read_csv("data/SA1_2016_AUST.csv")
+sa1_4 <- sa1_4 %>%
+  group_by(SA4_NAME_2016) %>%
+  summarise(territory_gccsa = mean("GCCSA_NAME_2016"), territory_state = mean("STATE_NAME_2016"))
+#warnings()
+
+#These 2 X efforts to group_by didn't work
+sa1_4 <- read_csv("data/SA1_2016_AUST.csv")
+sa1_4_group <- sa1_4 %>%
+  group_by(SA4_NAME_2016) # same result with "SA4_NAME_2016"
+u_r_r <- left_join(u_r, sa1_4_group, by = c("territory_sa4" = "SA4_NAME_2016"))
+glimpse(sa1_4_group) # Observations: 57,523
+glimpse(u_r_r)# Observations: 9,366,867  ###9 million rows?###
+
+sa1_4 <- read_csv("data/SA1_2016_AUST.csv")
+sa1_4_group <- sa1_4 %>%
+  select(SA4_NAME_2016, GCCSA_NAME_2016, STATE_NAME_2016) %>%
+  group_by(SA4_NAME_2016)
+glimpse(sa1_4_group) # Observations: 57,523
+u_r_r <- left_join(u_r, sa1_4_group, by = c("territory_sa4" = "SA4_NAME_2016"))
+glimpse(u_r_r) # Observations: 9,368,406  ###9 million rows?###
+
+
+# Extend Irfan's solution'
+u_r_rollup <- left_join(u_r, sa4_rollup)
+glimpse(u_r) #Observations: 15,390
+glimpse(u_r_rollup) #Observations: 15,390
+select(u_r_rollup, territory_state, territory_gccsa, territory_sa4, date, unemployed, population, unemploy_rate)
+
+#End of Problem solving to try to resolve joining problems and getting to territory rollup
+#Solution below using Irfan's tips
+#########################################################################
+#Resuming remoteness EDA
+
+#Load ABS sa1 -> sa4 -> gccsa -> state rollup hierarchies 
+sa1_4 <- read_csv("data/SA1_2016_AUST.csv")
+glimpse(sa1_4) #Observations: 57,523
+glimpse(u_r) #Observations: 15,390
+
+#Create a 1-2-1 like territory rollup table
+sa4_rollup <- sa1_4 %>%
+  add_column(territory_nation = "Australia") %>%
+  select(territory_nation, territory_sa4 = SA4_NAME_2016, territory_gccsa = GCCSA_NAME_2016, territory_state =STATE_NAME_2016) %>%
+  distinct(territory_sa4, territory_gccsa, territory_state, territory_nation) 
+glimpse(sa4_rollup)# Observations: 107 - interim SUCCESS!!!
+count(distinct(sa4_rollup, territory_sa4)) #1   107
+print(distinct(sa4_rollup, territory_sa4), n = "inf") # A tibble: 107 x 1
+print(distinct(sa4_rollup, territory_gccsa), n = "inf") # A tibble: 34 x 1
+print(distinct(sa4_rollup, territory_state), n = "inf") # A tibble: 9 x 1
+print(distinct(sa4_rollup, territory_nation), n = "inf") # A tibble: 1 x 1
+
+# Join unemployment data to territory rollups
+u_r_rollup <- left_join(u_r, sa4_rollup) %>%
+  select(territory_nation, territory_state, territory_gccsa, territory_sa4, remoteness_index, date, unemployed, population, unemploy_rate)
+
+glimpse(u_r) #Observations: 15,390
+glimpse(u_r_rollup) #Observations: 15,390
+
+#############################################################################
+# Truncated exploration of unusual territories
+# filter(sa4_rollup, territory_state == "Other Territories") # A tibble: 9 x 1
+#############################################################################
+#Resuming remoteness EDA
+
+#Build a table for charting unemployment for the whole of Australia
+u_aust <- u_r_rollup %>%
+  select(territory_nation, date, unemployed, population) %>%
+  group_by(territory_nation, date) %>%
+  summarize(unemployed = sum(unemployed), population = sum(population)) %>%
+  mutate(unemploy_rate = unemployed / population)
+
+#Build a table for charting unemployment for the whole of Australia
+u_aust_tline <- ggplot(data = u_aust) + 
+  geom_smooth(mapping = aes(x = date, y = unemploy_rate), se = FALSE)
+print(u_aust_tline + 
+                    ggtitle("Unemployment Rates Australia")
+                    + labs(y="Unemployment Rate", x = "Jan 2006 - Mar 2020"))
+ggsave("RemoteEDA 6 Aust TLine.pdf")
+ggsave("RemoteEDA 6 Aust TLine.png")
+
+#Build a table to show unemployment variation in the ACT and NT
+u_states <- u_r_rollup %>%
+  select(territory_state, date, unemployed, population) %>%
+  group_by(territory_state, date) %>%
+  filter(territory_state == "Australian Capital Territory" | territory_state == "Northern Territory") %>%
+  summarize(unemployed = sum(unemployed), population = sum(population)) %>%
+  mutate(unemploy_rate = unemployed / population)
+glimpse(u_states)
+
+#Build a table for charting unemployment in the ACT and NT
+u_states_tline <- ggplot(data = u_states) + 
+  geom_smooth(mapping = aes(x = date, y = unemploy_rate, linetype = territory_state), se = FALSE)
+print(u_states_tline + 
+        ggtitle("Unemployment Rates ACT and NT")
+      + labs(y="Unemployment Rate", x = "Jan 2006 - Mar 2020"))
+ggsave("RemoteEDA 7 AustStates TLine  ACTNT.pdf")
+
+#Build a table to show unemployment variation in NSW and WA
+u_states <- u_r_rollup %>%
+  select(territory_state, date, unemployed, population) %>%
+  group_by(territory_state, date) %>%
+  filter(territory_state == "Western Australia" | territory_state == "New South Wales") %>% 
+  summarize(unemployed = sum(unemployed), population = sum(population)) %>%
+  mutate(unemploy_rate = unemployed / population)
+glimpse(u_states)
+
+#Build a table for charting unemployment in  NSW and WA
+u_states_tline <- ggplot(data = u_states) + 
+  geom_smooth(mapping = aes(x = date, y = unemploy_rate, linetype = territory_state), se = FALSE)
+print(u_states_tline + 
+        ggtitle("Unemployment Rates NSW and WA")
+      + labs(y="Unemployment Rate", x = "Jan 2006 - Mar 2020"))
+ggsave("RemoteEDA 8 AustStates TLine  NSWWA.pdf")
+ggsave("RemoteEDA 8 AustStates TLine  NSWWA.png")
+
+#Build a table to show unemployment variation in Greater Sydney and the Rest of NSW
+u_gccsa <- u_r_rollup %>%
+  select(territory_gccsa, date, unemployed, population) %>%
+  group_by(territory_gccsa, date) %>%
+  filter(territory_gccsa == "Greater Sydney" | territory_gccsa == "Rest of NSW") %>% 
+  summarize(unemployed = sum(unemployed), population = sum(population)) %>%
+  mutate(unemploy_rate = unemployed / population)
+glimpse(u_gccsa)
+
+#Build a table for charting unemployment in Greater Sydney and the Rest of NSW
+u_gccsa_tline <- ggplot(data = u_gccsa) + 
+  geom_smooth(mapping = aes(x = date, y = unemploy_rate, linetype = territory_gccsa), se = FALSE)
+print(u_gccsa_tline + 
+        ggtitle("Unemployment Rates Greater Sydney and Rest of NSW")
+      + labs(y="Unemployment Rate", x = "Jan 2006 - Mar 2020"))
+ggsave("RemoteEDA 9 AustGCCSA TLine  GSydNSW.pdf")
+ggsave("RemoteEDA 9 AustGCCSA TLine  GSydNSW.png")
+
+#Build a table to show unemployment variation within Sydney
+u_sa4 <- u_r_rollup %>%
+  select(territory_sa4, date, unemployed, population) %>%
+  group_by(territory_sa4, date) %>%
+  filter(territory_sa4 == "Sydney - Eastern Suburbs" | territory_sa4 == "Sydney - South West") %>% 
+  summarize(unemployed = sum(unemployed), population = sum(population)) %>%
+  mutate(unemploy_rate = unemployed / population)
+glimpse(u_sa4)
+
+#Build a table for charting unemployment in Greater Sydney and the Rest of NSW
+u_sa4_tline <- ggplot(data = u_sa4) + 
+  geom_smooth(mapping = aes(x = date, y = unemploy_rate, linetype = territory_sa4), se = FALSE)
+print(u_sa4_tline + 
+        ggtitle("Unemployment Rates Sydney Eastern Suburbs and South West")
+      + labs(y="Unemployment Rate", x = "Jan 2006 - Mar 2020"))
+ggsave("RemoteEDA 10 Austsa4 TLine  SydEastAndSouthWest.pdf")
+ggsave("RemoteEDA 10 Austsa4 TLine  SydEastAndSouthWest.png")
+
+#Build a table to show unemployment variation within Sydney
+u_sa4 <- u_r_rollup %>%
+  select(territory_sa4, date, unemployed, population) %>%
+  group_by(territory_sa4, date) %>%
+  filter(territory_sa4 == "Sydney - Eastern Suburbs" | territory_sa4 == "Sydney - South West") %>% 
+  summarize(unemployed = sum(unemployed), population = sum(population)) %>%
+  mutate(unemploy_rate = unemployed / population)
+glimpse(u_sa4)
+
+#Build a table for charting unemployment variation within Sydney
+u_sa4_tline <- ggplot(data = u_sa4) + 
+  geom_smooth(mapping = aes(x = date, y = unemploy_rate, linetype = territory_sa4), se = FALSE)
+print(u_sa4_tline + 
+        ggtitle("Unemployment Rates Sydney Eastern Suburbs and South West")
+      + labs(y="Unemployment Rate", x = "Jan 2006 - Mar 2020"))
+ggsave("RemoteEDA 10 Austsa4 TLine  SydEastAndSouthWest.pdf")
