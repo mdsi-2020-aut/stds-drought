@@ -132,9 +132,14 @@ tibble(columns = names(check_mean),
 labourforce_tablebuilder %>% group_by(sa4) %>%
   summarise(count = n()) %>%
   arrange(desc(count))
+#last disnct modify
+master_social_good <- master_social_good %>% 
+  distinct()
+
 
 #save RData
 save(master_social_good,labourforce_tablebuilder, file="./data/master_data_tablebuilder.RData")
+
 
 
 
